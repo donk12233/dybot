@@ -1,0 +1,2064 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="console-token" content="__CONSOLE_TOKEN__">
+<title>抖音 AI 代理人 · 控制台</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
+    --fg:#e6e9ef; --dim:#9aa3b2; --accent:#4c9aff; --ok:#3ecf8e; --warn:#e8b339; --bad:#ff6b6b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.6 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+  header{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;padding:12px 20px;background:rgba(15,17,21,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  header h1{font-size:15px;margin:0;font-weight:600}
+  header .path{color:var(--dim);font-size:12px}
+  .spacer{flex:1}
+  button{font:inherit;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--fg);padding:7px 14px;cursor:pointer}
+  button:hover{border-color:#3d4553}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  button.primary:disabled{opacity:.5;cursor:default}
+  button.ghost{background:transparent}
+  button.danger{color:var(--bad);border-color:#4a2b2b;background:transparent}
+  nav{display:flex;gap:6px;padding:14px 20px 0;flex-wrap:wrap}
+  main{padding:16px 20px 80px;max-width:960px}
+  section{display:none}
+  section.on{display:block}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+  .card h2{font-size:13px;margin:0 0 4px;color:var(--fg);letter-spacing:.02em}
+  .card p.hint{margin:0 0 12px;color:var(--dim);font-size:12px}
+  label{display:block;font-size:12px;color:var(--dim);margin:12px 0 4px}
+  input[type=text],textarea{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--fg);padding:9px 11px;font:inherit;resize:vertical}
+  input[type=number]{width:110px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--fg);padding:8px 10px;font:inherit}
+  textarea.tall{min-height:110px}
+  .row{display:flex;gap:8px;align-items:center}
+  .list{display:flex;flex-direction:column;gap:8px;margin:8px 0 0}
+  .item{display:flex;gap:8px;align-items:flex-start}
+  .item textarea,.item input{flex:1}
+  .item button{flex:none;padding:6px 10px;line-height:1}
+  .locked{opacity:.85}
+  .locked .item textarea{background:#141821;color:var(--dim);cursor:not-allowed}
+  .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:#252a35;color:var(--dim);margin-left:8px;vertical-align:middle}
+  .badge.lock{background:#3a2a1a;color:var(--warn)}
+  .friend{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  @media(max-width:720px){.grid2,.grid3{grid-template-columns:1fr}}
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 18px;display:none;z-index:50;max-width:80vw}
+  #toast.ok{border-color:#2c5c45;color:var(--ok)}
+  #toast.bad{border-color:#5c2c2c;color:var(--bad)}
+  .dirty{color:var(--warn);font-size:12px}
+  .verify{display:flex;gap:8px;align-items:center;margin-top:14px;color:var(--fg);font-size:13px;cursor:pointer}
+  .verify input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+  .friend.unverified{border-color:#4a3a2a}
+  .friend.unverified .tag{color:var(--warn);font-size:11px}
+    /* 卡片折叠 */
+    .card>h2{padding-bottom:6px}
+    .card.collapsed>h2{margin-bottom:0;border-bottom:none}
+    .card-arrow{transition:transform .15s}
+    /* ---------- 导航与页码：让"我在哪一页"一眼可见 ---------- */
+    header{position:sticky;top:0;z-index:30;backdrop-filter:blur(8px)}
+    #pageName{font-size:12.5px;color:var(--accent);border:1px solid rgba(76,154,255,.35);
+      background:rgba(76,154,255,.10);border-radius:999px;padding:2px 10px;margin-left:2px}
+    nav{position:sticky;top:56px;z-index:29;backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+    nav button{position:relative;border:1px solid transparent;background:transparent;color:var(--dim);
+      border-radius:10px 10px 0 0;padding:8px 14px;font-weight:500}
+    nav button:hover{color:var(--fg);background:rgba(255,255,255,.03)}
+    nav button.on{color:#fff;background:rgba(76,154,255,.12);border-color:transparent}
+    nav button.on::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;
+      background:var(--accent);border-radius:2px}
+    .page-head{margin:0 0 12px;display:flex;align-items:baseline;gap:10px}
+    .page-head h2{margin:0;font-size:18px;font-weight:600;border:none;padding:0}
+    .page-head .desc{color:var(--dim);font-size:12.5px}
+
+    /* ---------- 按钮不再铺满一行：次要动作收进「更多」 ---------- */
+    .actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    details.menu{position:relative;display:inline-block}
+    details.menu>summary{list-style:none;cursor:pointer;border:1px solid var(--line);border-radius:8px;
+      padding:7px 12px;font-size:13px;color:var(--dim);background:transparent;user-select:none}
+    details.menu>summary::-webkit-details-marker{display:none}
+    details.menu>summary:hover{color:var(--fg);border-color:#3d4553}
+    details.menu[open]>summary{color:var(--fg);border-color:#3d4553}
+    details.menu.left>.menu-body{left:0;right:auto}
+details.menu>.menu-body{position:absolute;right:0;top:calc(100% + 6px);min-width:180px;z-index:50;
+      background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:6px;
+      box-shadow:0 10px 30px rgba(0,0,0,.45)}
+    details.menu>.menu-body button,details.menu>.menu-body a{display:block;width:100%;text-align:left;
+      background:transparent;border:none;color:var(--fg);padding:8px 10px;border-radius:8px;font-size:13px;cursor:pointer}
+    details.menu>.menu-body button:hover,details.menu>.menu-body a:hover{background:rgba(255,255,255,.06)}
+    /* ---------- 记忆区：一屏能看完，操作按钮悬停才出现 ---------- */
+    .mem-list{font-size:13px;line-height:1.6}
+    .mem-group{margin-bottom:14px}
+    .mem-group-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+    .mem-group-head b{font-size:14px}
+    .mem-group-head .cnt{color:var(--dim);font-size:12px}
+    .mem-group-head .clr{margin-left:auto}
+    .mem-row{display:flex;align-items:baseline;gap:8px;padding:2px 0;border-radius:6px}
+    .mem-row:hover{background:rgba(255,255,255,.035)}
+    .mem-row .txt{flex:1 1 auto;min-width:0;color:var(--dim)}
+    .mem-row .ops{flex:0 0 auto;opacity:0;transition:opacity .12s;display:flex;gap:4px}
+    .mem-row:hover .ops,.mem-row:focus-within .ops{opacity:1}
+    .mem-row .ops button{border:none;background:transparent;color:var(--dim);cursor:pointer;
+      font-size:11.5px;padding:2px 6px;border-radius:6px}
+    .mem-row .ops button:hover{background:rgba(255,255,255,.08);color:var(--fg)}
+    .mem-row .ops button.del:hover{color:var(--bad)}
+        .mem-row .txt{white-space:normal}
+    button.mem-more{margin-top:4px;background:transparent;border:none;color:var(--accent);
+      font-size:12px;cursor:pointer;padding:2px 0}
+    button.mem-more:hover{text-decoration:underline}
+    .mem-add{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px}
+    .mem-add select,.mem-add input{background:var(--panel2);border:1px solid var(--line);
+      border-radius:8px;color:var(--fg);padding:9px 11px;font-size:13px}
+    .mem-add select{flex:0 0 auto}
+    .mem-add input{flex:1 1 240px;min-width:0}
+    .mem-add>button.primary{flex:0 0 auto}
+    /* 窄卡片里的菜单别再溢出：限制宽度并允许换行 */
+    details.menu>.menu-body{min-width:170px;max-width:min(260px,calc(100vw - 60px));white-space:normal}
+    .card{overflow:visible}
+</style>
+</head>
+<body>
+<div id="verBanner" style="display:none;position:fixed;left:0;right:0;top:0;z-index:80;background:linear-gradient(90deg,#8a1f1f,#b22a2a);color:#fff;padding:10px 18px;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.45);display:none;align-items:center;gap:12px">
+  <b style="font-size:15px">⚠ 代码已更新，当前运行的是旧版本</b>
+  <span id="verBannerText" style="opacity:.9;font-size:12.5px"></span>
+  <span style="flex:1"></span>
+  <button onclick="restartRunner()" style="background:#fff;color:#8a1f1f;border:none;border-radius:8px;padding:7px 14px;font-weight:600;cursor:pointer">立即重启运行</button>
+  <button onclick="document.getElementById('verBanner').style.display='none'" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:8px;padding:7px 12px;cursor:pointer">暂时忽略</button>
+</div>
+<header>
+  <h1>抖音 AI 代理人</h1>
+  <span class="path">config.json</span>
+  <span id="pageName">人设</span>
+  <span id="dirty" class="dirty" hidden>● 有未保存改动</span>
+  <span class="spacer"></span>
+  <button class="ghost" onclick="load()">重新载入</button>
+  <button class="primary" id="save" onclick="save()">保存</button>
+</header>
+<div id="errBar" style="display:none;margin:8px 22px 0;padding:9px 12px;border:1px solid var(--bad);border-radius:8px;background:rgba(220,80,80,.12);color:#ffd0d0;font-size:12.5px;line-height:1.6">
+  <b>页面出错</b> <span id="errText"></span>
+  <button class="ghost" style="float:right;padding:1px 8px;font-size:11px" onclick="document.getElementById('errBar').style.display='none'">关闭</button>
+</div>
+
+<nav>
+  <button class="on" data-tab="persona">人设</button>
+  <button data-tab="rules">判据</button>
+  <button data-tab="friends">白名单</button>
+  <button data-tab="limits">上限</button>
+  <button data-tab="run">运行</button>
+  <button data-tab="forward">转发</button>
+  <button data-tab="auto">自动</button>
+  <button data-tab="lab">实验室</button>
+  <span style="margin-left:auto;display:flex;gap:6px">
+    <button onclick="expandAllCards()" style="font-size:12px">全部展开</button>
+    <button onclick="collapseAllCards()" style="font-size:12px">全部收起</button>
+  </span>
+</nav>
+
+<main>
+  <!-- 人设 -->
+  <section id="persona" class="on">
+    <div class="page-head"><h2>人设</h2><span class="desc">她是谁、怎么说话</span></div>
+    <div class="card">
+      <h2>角色卡 <span class="badge" id="charBadge">生效中</span></h2>
+      <p class="hint">
+        这是它说话的全部依据：身份、语气、禁用词、私信分寸、示例。<b>角色卡非空时，下面「它是谁」那几项会被完全忽略</b>（不是叠加）。
+        清空这张卡，才会退回用下面的短字段。
+      </p>
+      <textarea id="p_char" style="min-height:320px;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;line-height:1.7"></textarea>
+      <div class="row" style="margin-top:10px">
+        <span class="hint" style="margin:0" id="charCount"></span>
+        <span class="spacer"></span>
+        <button class="ghost" onclick="restoreDefaultCharacter()">恢复默认</button>
+        <button class="ghost" onclick="if(confirm('清空角色卡？之后会退回用下面的短字段。')){document.getElementById('p_char').value='';updateCharState();}">清空角色卡</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>试一句 <span class="badge">不发送</span></h2>
+      <p class="hint">用当前角色卡/判据/记忆生成一条草稿，只显示不发送，也不写进聊天记录。改人设时用它验证。</p>
+      <div class="row" style="margin-top:14px;flex-wrap:wrap;gap:8px">
+        <select id="tryConv" style="background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--fg);padding:9px 11px"></select>
+        <input type="text" id="tryText" placeholder="用当前人设试一句（不发送），例如：给我发点视频" style="flex:1;min-width:260px">
+        <button class="primary" onclick="trySay()">试一句</button>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--dim)">
+          <input type="checkbox" id="tryMem" checked style="width:16px;height:16px;accent-color:var(--accent)">带入记忆
+        </label>
+      </div>
+      <div id="tryOut" style="margin-top:10px;font-size:13px;line-height:1.8;color:var(--dim)"></div>
+    </div>
+    <div class="card">
+      <h2>它是谁 <span class="badge" id="shortBadge">仅当角色卡为空时生效</span></h2>
+      <p class="hint">它用自己的身份说话，不是你的小号。这一段的优先级低于上面的角色卡。</p>
+      <label>名字（可不填）</label>
+      <input type="text" id="p_name">
+      <label>自我介绍（第一句就说明自己是 AI）</label>
+      <input type="text" id="p_intro">
+      <label>说话风格</label>
+      <textarea id="p_tone" class="tall"></textarea>
+      <label>系统约束（改之前想清楚：这几行是防事故的）</label>
+      <textarea id="p_note" class="tall"></textarea>
+    </div>
+      <h2>它「知道你」什么 <span class="badge">默认空</span></h2>
+      <p class="hint">空 = 朋友问起你的事，它一律「不知道」。想让它说什么，在这里加一条。</p>
+      <div class="list" id="knows"></div>
+      <button class="ghost" onclick="addItem('knows','')">+ 加一条</button>
+    </div>
+    <div class="card">
+      <h2>绝对不许聊</h2>
+      <div class="list" id="forbidden"></div>
+      <button class="ghost" onclick="addItem('forbidden','')">+ 加一条</button>
+    </div>
+  </section>
+
+  <!-- 判据 -->
+  <section id="rules">
+    <div class="page-head"><h2>判据</h2><span class="desc">什么值得转发：评分表 + 初筛 + 硬禁区</span></div>
+      <div class="card" style="margin-top:14px">
+        <h2>初筛开关 <span class="badge">不花模型钱 / 先淘汰</span></h2>
+        <p class="hint">
+          这些是「读之前」和「读之后」的两道机械筛。**只有这里关掉的才不会被送进评分**，
+          所以调宽一点 = 交给模型判，调窄 = 省时间但可能误杀。
+          改完保存即可，`autoreply` 下一轮生效（它是每轮重读配置的）。
+        </p>
+        <div id="swBox"><span class="hint">读取中…</span></div>
+        <div class="row" style="margin-top:12px;gap:8px">
+          <button class="primary" onclick="saveSwitches()">保存初筛开关</button>
+          <button class="ghost" onclick="loadSwitches()">重新读取</button>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h2>评分制判据 <span class="badge" id="scBadge">读取中…</span></h2>
+        <p class="hint">
+          模型只报「命中哪些条目」，<b>总分和结论由代码按表算</b>（避免模型自己乱加数）。
+          命中<b>硬禁区</b>是一票否决，跟分数无关。下面可以改门槛，或直接编辑整张表。
+        </p>
+        <div class="grid3">
+          <div><label>启用评分制</label><br><input type="checkbox" id="sc_en" style="width:18px;height:18px;accent-color:var(--accent)"></div>
+          <div><label>发出门槛（总分 ≥）</label><input type="number" id="sc_sendAt" min="0" max="100"></div>
+          <div><label>至少命中几个加分项</label><input type="number" id="sc_minPlus" min="0" max="5"></div>
+        </div>
+        <div class="row" style="margin-top:12px;flex-wrap:wrap;gap:8px">
+          <button class="primary" onclick="saveScoring()">保存门槛</button>
+          <button class="ghost" onclick="toggleScoringTable()">编辑评分表（JSON）</button>
+          <span id="scOut" class="hint" style="margin:0"></span>
+        </div>
+        <div id="scTable" style="margin-top:12px;font-size:12.5px;line-height:1.7;max-height:420px;overflow:auto"></div>
+        <div id="scEditor" style="display:none;margin-top:12px">
+          <textarea id="scJson" spellcheck="false" style="width:100%;height:300px;font-family:Consolas,monospace;font-size:12px;background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:10px"></textarea>
+          <div class="row" style="margin-top:8px;gap:8px">
+            <button class="primary" onclick="saveScoringTable()">保存整张表</button>
+            <button class="ghost" onclick="toggleScoringTable()">取消</button>
+          </div>
+        </div>
+      </div>
+    <div class="card locked">
+      <h2>硬禁区 <span class="badge lock">🔒 锁定</span></h2>
+      <p class="hint">这里我不给你改。它们是唯一会从「社交事故」升级成「你本人麻烦」的类别，跟「有意思」不冲突，所以不能被放行。</p>
+      <div class="list" id="blocked"></div>
+    </div>
+  </section>
+  <section id="friends">
+    <div class="page-head"><h2>白名单</h2><span class="desc">只发给这些人，昵称必须一字不差</span></div>
+    <div class="card">
+      <h2>发给谁 <span class="badge" id="fcount">0 / 5</span></h2>
+      <p class="hint">必须是特别要好的朋友。<b>「名字」必须和抖音分享面板里显示的昵称一字不差</b>——面板只给昵称，不给抖音号，所以名字是唯一的匹配依据。没勾「已验证」的人<b>永远不会被发送</b>。</p>
+      <div id="friends-box"></div>
+      <button class="ghost" onclick="addFriend()">+ 加一个朋友</button>
+    </div>
+  </section>
+
+  <!-- 上限 -->
+  <section id="limits">
+    <div class="page-head"><h2>上限</h2><span class="desc">每日额度与冷却</span></div>
+    <div class="card">
+      <h2>发送上限</h2>
+      <p class="hint">前两三天故意压低，看清它错在哪，再放量。</p>
+      <div class="grid3">
+        <div><label>每日最多发几条</label><input type="number" id="l_out" min="0"></div>
+        <div><label>每日最多回复几条</label><input type="number" id="l_reply" min="0"></div>
+        <div><label>一条视频最多发几人</label><input type="number" id="l_rec" min="0"></div>
+        <div><label>同一条视频冷却（小时）</label><input type="number" id="l_cool" min="0"></div>
+        <div><label>单次运行上限（分钟）</label><input type="number" id="l_min" min="0" max="20"></div>
+        <div><label>对话上下文预算（字）</label><input type="number" id="l_histchars" min="500" max="20000" step="500"></div>
+        <div><label>最多带几条消息</label><input type="number" id="l_histmsgs" min="3" max="100"></div>
+        <div><label>同一视频去重（小时）</label><input type="number" id="l_vdedupe" min="0" max="168"></div>
+      </div>
+      <p class="hint" style="margin-top:12px">前五项都真的在拦：转发日上限跨运行累计、回复日上限（到点就停、不再重试）、单视频冷却按 video_id 去重、单次运行到点即停。<br><b>对话上下文预算</b>：每轮最多带多少字的历史（越多越"记得住"，但每次调用更贵）。3000 字约等于最近十几轮；调到 6000 会更连贯，token 约翻一倍。<br><b>同一视频去重</b>：同一视频 id 在这么长时间内只处理一次（默认 1 小时）。调大＝更省，但他重发时她不会重看；调 0＝每次都重看。</p>
+    </div>
+  </section>  <!-- 运行 -->
+  <section id="run">
+    <div class="page-head"><h2>运行</h2><span class="desc">启动/停止、体检、额度、事件流</span></div>
+    <div class="card">
+      <h2>运行状态 <span class="badge" id="runBadge">读取中…</span></h2>
+      <p class="hint">这里看它此刻在干什么。常驻模式下按「上限」页的轮询间隔读私信（只读 DOM，不发请求），有他的新消息才生成回复。</p>
+      <div class="grid3" style="margin-bottom:14px">
+        <div><label>模型通道</label><div id="runModel">-</div></div>
+        <div><label>今日调用 / 已发</label><div id="runUsage">-</div></div>
+        <div><label>今日 token（入/出）</label><div id="runTokens">-</div></div>
+      </div>
+      <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:4px">
+        <button class="primary" onclick="startRun(true)" style="min-width:88px">启动</button>
+        <button class="ghost" onclick="startRun(false)" style="min-width:88px">预演</button>
+        <button class="danger" onclick="stopRun()" style="min-width:88px">停止</button>
+        <span style="width:10px"></span>
+        <button class="ghost" onclick="runHealth()">体检</button>
+        <details class="menu">
+          <summary>导出 ▾</summary>
+          <div class="menu-body">
+            <button onclick="window.open('/api/export?which=events','_blank')">事件流</button>
+            <button onclick="window.open('/api/export?which=autoreply','_blank')">回复记录</button>
+            <button onclick="window.open('/api/export?which=sent','_blank')">发送记录</button>
+            <button onclick="window.open('/api/export?which=runner','_blank')">运行日志</button>
+          </div>
+        </details>
+      </div>
+      <div id="codeHint" style="margin-top:12px;font-size:12px;line-height:1.6"></div>
+      <div id="runnerExit" style="margin-top:14px;font-size:12.5px;line-height:1.7;color:var(--dim)"></div>
+      <div id="healthOut" style="margin-top:12px;font-size:12.5px;line-height:1.8;columns:2;column-gap:28px"></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h2>模型通道（API Key）<span class="badge" id="llmBadge">读取中…</span></h2>
+        <p class="hint">
+          换机器时在这里填一次就行，会写到 <code>state/llm.json</code>（已被 gitignore，不会进仓库）。
+          也可以用环境变量 <code>DYBOT_LLM_KEY</code> / <code>DYBOT_LLM_BASE</code> / <code>DYBOT_LLM_MODEL</code> 覆盖。
+        </p>
+        <div class="grid3">
+          <div><label>API Key</label><input type="password" id="llmKey" placeholder="sk-...（留空表示不改）"></div>
+          <div><label>Base URL</label><input type="text" id="llmBase" placeholder="https://api.deepseek.com"></div>
+          <div><label>模型</label><input type="text" id="llmModel" placeholder="deepseek-chat"></div>
+        </div>
+        <div class="row" style="margin-top:12px;flex-wrap:wrap;gap:8px">
+          <button class="primary" onclick="saveLlm()">保存</button>
+          <button class="ghost" onclick="testLlm()">测试连通</button>
+          <span class="spacer"></span>
+          <span id="llmOut" class="hint" style="margin:0"></span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>它刚才干了什么</h2>
+      <p class="hint">自动刷新。收到 → 生成 → 安检 → 发送，每一步都在这里。</p>
+      <div id="events" style="font-size:13px;line-height:1.9"></div>
+    </div>
+  </section>
+
+  <!-- 转发 -->
+  <section id="forward">
+    <div class="page-head"><h2>转发</h2><span class="desc">手动扫一轮推荐流</span></div>
+    <div class="card">
+      <h2>扫一轮推荐流 → 判 → 转发</h2>
+      <p class="hint">先机械开关筛（不花钱），再进详情页拿章节要点给模型判，最后转发。真发会走完整护栏：白名单、时长、日限额、去重、精判凭证。</p>
+      <div class="grid3">
+        <div><label>扫几条</label><input type="number" id="d_max" min="1" max="30" value="6"></div>
+        <div><label>最多转几条</label><input type="number" id="d_top" min="1" max="5" value="1"></div>
+        <div><label>收件人</label><select id="d_only" style="width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--fg);padding:9px 11px"><option value="">白名单全部</option></select></div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button class="primary" onclick="startDigest(false)">预演（只看判什么，不发）</button>
+        <button class="danger" onclick="startDigest(true)">真发</button>
+        <span class="spacer"></span>
+        <span id="digestState" class="hint" style="margin:0">空闲</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>运行输出</h2>
+      <pre id="digestLog" style="margin:0;white-space:pre-wrap;font-size:12px;line-height:1.6;max-height:460px;overflow:auto;color:#c9d1d9">还没有跑过。</pre>
+    </div>
+  </section>
+  <!-- 自动 -->
+  <section id="auto">
+    <div class="page-head"><h2>自动</h2><span class="desc">概率转发、主动聊天、记忆、重置</span></div>
+    <div class="card">
+      <h2>概率转发 <span class="badge" id="dgStat">读取中…</span></h2>
+      <p class="hint">不是定时，是「每 N 分钟检查一次，命中概率才跑」。命中后扫 <b>扫几条</b> 条、最多转 <b>最多转</b> 条，收件人是白名单全部。</p>
+      <div class="grid3">
+        <div><label>启用</label><br><input type="checkbox" id="dg_en" style="width:18px;height:18px;accent-color:var(--accent)"></div>
+        <div><label>命中概率 (0~1)</label><input type="number" id="dg_chance" min="0" max="1" step="0.05"></div>
+        <div><label>检查间隔（分钟）</label><input type="number" id="dg_every" min="1"></div>
+        <div><label>每天最多几轮</label><input type="number" id="dg_cap" min="0"></div>
+        <div><label>每轮扫几条</label><input type="number" id="dg_max" min="1" max="30"></div>
+        <div><label>发给谁</label><select id="dg_route"><option value="fit">按判定挑人（推荐）</option><option value="all">白名单全部</option></select></div>
+        <div><label>每轮最多转几条</label><input type="number" id="dg_top" min="1" max="5"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>主动聊天 <span class="badge" id="paStat">读取中…</span></h2>
+      <p class="hint">条件全部满足才会主动开口：<b>静默够久</b> + <b>不在安静时段</b> + <b>额度没满</b> + <b>有记忆事实</b> + <b>骰子命中</b>。一轮最多主动一个人。</p>
+      <div class="grid3">
+        <div><label>启用</label><br><input type="checkbox" id="pa_en" style="width:18px;height:18px;accent-color:var(--accent)"></div>
+        <div><label>命中概率 (0~1)</label><input type="number" id="pa_chance" min="0" max="1" step="0.05"></div>
+        <div><label>检查间隔（分钟）</label><input type="number" id="pa_every" min="1"></div>
+        <div><label>每天最多几次（全部）</label><input type="number" id="pa_cap" min="0"></div>
+        <div><label>同一人每天最多</label><input type="number" id="pa_perconv" min="0"></div>
+        <div><label>静默多久才主动（小时）</label><input type="number" id="pa_idle" min="0"></div>
+        <div><label>安静时段（如 23-8）</label><input type="text" id="pa_quiet" placeholder="23-8"></div>
+        <div><label>必须有记忆</label><br><input type="checkbox" id="pa_reqmem" style="width:18px;height:18px;accent-color:var(--accent)"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>记忆</h2>
+      <p class="hint">它记住的关于每个人的「事实」。清空后它会重新像第一次见你。</p>
+      <div id="memList" class="mem-list"></div>
+      <div class="mem-add">
+        <select id="memConv"></select>
+        <input type="text" id="memText" placeholder="要它记住的事，例如：他在做抖音机器人" maxlength="60">
+        <button class="primary" onclick="addMemory()">加一条</button>
+        <details class="menu">
+          <summary>更多 ▾</summary>
+          <div class="menu-body">
+            <button onclick="refreshAuto()">刷新</button>
+            <button onclick="backfillMemory()">从历史对话补记忆</button>
+            <button onclick="resetWhat('memory','清空全部会话的记忆？')">清空全部记忆</button>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>重置状态 <span class="badge lock">不可撤销</span></h2>
+      <p class="hint">出问题、或想重新开始一天的额度时用。<b>重置今日发送次数</b>会同时清掉转发日上限和回复日上限的计数。</p>
+      <div class="row" style="flex-wrap:wrap">
+        <button onclick="resetWhat('schedule','清零今日计数与检查时间？额度会立刻恢复。')">重置调度状态</button>
+        <button class="danger" onclick="resetWhat('memory','清空全部会话的长期记忆？她会重新像第一次见你。')">清空全部记忆</button>
+        <button class="danger" onclick="resetWhat('sent-today','重置今日发送次数？会清掉今天 sent.jsonl 里的成功记录，日上限立刻恢复；同视频去重也一并清空。')">重置今日发送次数</button>
+        <button onclick="resetWhat('events','清空事件流？面板历史会消失。')">清空事件流</button>
+        <button onclick="resetWhat('digestlog','清空转发日志？')">清空转发日志</button>
+      </div>
+      </div>
+    </div>
+  </section>
+  <!-- 实验室 -->
+  <section id="lab">
+    <div class="page-head"><h2>实验室</h2><span class="desc">不成熟功能：AI 视频总结</span></div>
+    <div class="card">
+      <h2>实验室 · 学词（热梗/黑话）<span class="badge" id="lexBadge">读取中…</span></h2>
+      <p class="hint">
+        她自己从聊天里学网络词/梗/黑话，学到就<b>直接生效</b>（注入提示词，最多 12 个）。
+        学得慢：默认每 12 次回复才学一次、一次最多 1 个。
+        <b>你在私信里说「以后别说 XX」，那个词会被永久禁掉</b>——优先级高于词库。
+      </p>
+      <div class="row" style="margin-top:12px;gap:16px;align-items:flex-end">
+        <div><label>启用</label><br>
+          <input type="checkbox" id="lexEnabled" onchange="saveLexSwitch()" style="width:18px;height:18px;accent-color:var(--accent)">
+        </div>
+        <div><label>每几次回复学一个词</label><br>
+          <input type="number" id="lexEvery" min="3" max="60" style="width:110px">
+        </div>
+        <span id="lexState" class="hint" style="margin:0"></span>
+      </div>
+      <div id="lexList" class="mem-list" style="margin-top:10px"></div>
+      <div class="mem-add">
+        <input type="text" id="lexTerm" placeholder="词，例如：绝绝子" maxlength="12">
+        <input type="text" id="lexMeaning" placeholder="意思（可不填）" maxlength="40">
+        <button class="primary" onclick="lexAddManual()">加一个</button>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <details class="menu left">
+          <summary>更多 ▾</summary>
+          <div class="menu-body">
+            <button onclick="refreshLex()">刷新</button>
+            <button onclick="lexClearDisabled()">删除全部停用词</button>
+          </div>
+        </details>
+      </div>
+    </div>
+    <div class="card">
+      <h2>实验室 · AI 视频总结 <span class="badge">不成熟 · 手动触发</span></h2>
+      <p class="hint">
+        让抖音自带的 AI 说出这条视频讲了什么。只用于「别人转发的视频」这种低频场景，<b>不参与任何自动流程</b>。<br>
+        原理：用弹窗打开视频 → 点右侧栏最上面的 AI 图标 → 点「AI抖音」页签 → 在 iframe 里发「视频总结」→ 抓回复。
+        <b>需要 Edge 窗口在前台可见</b>（整条链路靠坐标点击），单条约 10~15 秒。
+      </p>
+      <div class="row" style="gap:8px;flex-wrap:wrap">
+        <input type="text" id="labId" placeholder="视频 id（数字，从 /video/<id> 或 modal_id= 里取）" style="flex:1;min-width:300px">
+        <button class="primary" onclick="labRun()" id="labBtn">取 AI 总结</button>
+        <button class="ghost" onclick="labCancel()" id="labCancel" style="display:none">取消</button>
+      </div>
+      <div id="labStatus" class="hint" style="margin-top:10px"></div>
+      <div id="labSteps" style="margin-top:10px;font-size:12.5px;line-height:1.8;color:var(--dim)"></div>
+      <div id="labText" style="margin-top:12px;display:none">
+        <label>总结</label>
+        <textarea id="labOut" readonly style="min-height:220px;font-size:13px;line-height:1.7"></textarea>
+      </div>
+
+    </div>
+    <div class="card">
+      <h2>实验室 · 点赞 <span class="badge" id="likeBadge">未启用</span></h2>
+      <p class="hint">
+        看完他发来的视频后，用<b>评分表</b>再判一次「值不值得点赞」——门槛比转发更高。
+        <b>这是第一个会改动抖音数据的操作</b>，所以默认只「预演」（只记录不点）。
+        <br>判断放在<b>回复发出之后</b>，不会拖慢回复。
+      </p>
+      <div class="row" style="margin-top:12px;gap:16px;align-items:flex-end">
+        <div><label>启用</label><br>
+          <input type="checkbox" id="likeEnabled" onchange="saveLikeSwitch()" style="width:18px;height:18px;accent-color:var(--accent)">
+        </div>
+        <div><label>预演（只记录不点）</label><br>
+          <input type="checkbox" id="likeDry" onchange="saveLikeSwitch()" style="width:18px;height:18px;accent-color:var(--warn)">
+        </div>
+        <div><label>点赞门槛（分）</label><br>
+          <input type="number" id="likeScore" min="0" max="100" style="width:110px" onchange="saveLikeSwitch()">
+        </div>
+        <div><label>每日上限（最多 20）</label><br>
+          <input type="number" id="likeCap" min="0" max="20" style="width:110px" onchange="saveLikeSwitch()">
+        </div>
+      </div>
+      <div id="likeState" class="hint" style="margin-top:10px"></div>
+      <div id="likeList" class="mem-list" style="margin-top:10px"></div>
+      <div class="row" style="margin-top:12px">
+        <details class="menu left">
+          <summary>更多 ▾</summary>
+          <div class="menu-body">
+            <button onclick="refreshLike()">刷新</button>
+          </div>
+        </details>
+      </div>
+    </div>
+      <div class="card" style="margin-top:14px">
+        <h2>接入：收到转发视频时自动取总结 <span class="badge" id="labEnBadge">读取中…</span></h2>
+        <p class="hint">
+          打开后：朋友发来视频 → 先回一句「我看看」→ 取抖音 AI 总结（约 10~15 秒）→ 带着总结再生成回复。<br>
+          <b>关掉就完全走原来的逻辑</b>（只读标题/章节/评论），不会多花时间。<br>
+          取总结期间 Edge 窗口要保持前台可见；失败会自动退回原逻辑，不影响回复。
+        </p>
+        <div class="grid3">
+          <div><label>启用</label><br><input type="checkbox" id="labEn" onchange="saveLabSwitch()" style="width:18px;height:18px;accent-color:var(--accent)" onchange="labBadgeSync()"></div>
+          <div><label>先回的那句话</label><input type="text" id="labPre" placeholder="留空 = 不先回，直接取总结"></div>
+          <div></div>
+        </div>
+        <div class="row" style="margin-top:12px;gap:8px">
+          <button class="primary" onclick="saveLabSwitch()">保存</button>
+        </div>
+      </div>
+
+  </section>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+// 所有来自"朋友消息/日志"的文本都要转义后再进 innerHTML，
+// 否则朋友发来的 <img onerror=...> 会在你的控制台里执行。
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// 控制台 token：所有 POST 自动带上，防跨站伪造（本机别的网页也调不动）
+const CONSOLE_TOKEN = (document.querySelector('meta[name="console-token"]') || {}).content || '';
+(function () {
+  const _fetch = window.fetch.bind(window);
+  window.fetch = function (u, o) {
+    o = o || {};
+    if (String(o.method || 'GET').toUpperCase() === 'POST') {
+      o.headers = Object.assign({}, o.headers || {}, { 'x-console-token': CONSOLE_TOKEN });
+    }
+    return _fetch(u, o);
+  };
+})();
+let cfg = null;
+let dirty = false;
+
+const markDirty = (v=true) => {
+  dirty = v;
+  document.getElementById('dirty').hidden = !v;
+};
+
+function showErr(e, where) {
+  try {
+    const bar = document.getElementById("errBar");
+    const txt = document.getElementById("errText");
+    if (!bar || !txt) return;
+    txt.textContent = (where ? where + "：" : "") + (e && e.message ? e.message : String(e));
+    bar.style.display = "block";
+    console.error("[页面错误]", where, e);
+  } catch {}
+}
+
+function toast(msg, kind){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = kind || '';
+  t.style.display = 'block';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.style.display = 'none', kind === 'bad' ? 6000 : 2200);
+}
+
+async function load(){
+  try{
+    const r = await fetch('/api/config');
+    const j = await r.json();
+    if(!j.ok) throw new Error(j.error || '读取失败');
+    cfg = j.config;
+    CATALOG = j.catalog || [];
+    render();
+    markDirty(false);
+    // 保存后回读一次服务端配置：
+    //  ① 界面显示的是「真的存进去的东西」，不是内存里的
+    //  ② 任何开关没存住，这里会立刻把界面纠正回来
+    try {
+      const r2 = await fetch('/api/config');
+      const j2 = await r2.json();
+      if (j2 && j2.ok && j2.config) {
+        cfg = j2.config;
+        try { loadLexSwitch(); } catch {}
+        try { loadLabSwitch(); } catch {}
+      }
+    } catch {}
+    try { fillRecipients(); fillMemConv(); } catch {}
+    // 配置就绪后统一回填各卡片状态（不依赖固定延时）
+    try { loadLabSwitch(); loadLexSwitch(); loadLikeSwitch(); refreshLike(); } catch (e) { showErr(e, "load-cards"); }
+  }catch(e){ toast('载入失败：' + e.message, 'bad'); }
+}
+
+let CATALOG = [];
+
+function renderSwitches(){
+  const box = document.getElementById('switches');
+  if(!box) return;
+  box.innerHTML = '';
+  cfg.rules.switches = cfg.rules.switches || {};
+  const sw = cfg.rules.switches;
+  if(!CATALOG.length){ box.innerHTML = '<p class="hint">控制台版本较旧，重启后才会显示开关（服务端 /api/config 现在会返回 catalog）。</p>'; return; }
+
+  CATALOG.forEach(item => {
+    const v = sw[item.key] === undefined ? item.default : sw[item.key];
+    if(item.type === 'bool'){
+      const lab = document.createElement('label');
+      lab.className = 'verify';
+      lab.innerHTML = `<input type="checkbox" ${v ? 'checked' : ''}><span><b>${item.label}</b><br><span style="color:var(--dim);font-size:12px">${item.hint}</span></span>`;
+      box.appendChild(lab);
+      lab.querySelector('input').addEventListener('change', e => { sw[item.key] = e.target.checked; markDirty(); });
+    } else if(item.type === 'number'){
+      const div = document.createElement('div');
+      div.className = 'row';
+      div.style.margin = '14px 0 0';
+      div.innerHTML = `<label style="margin:0;flex:0 0 160px">${item.label}</label><input type="number" min="0" value="${Number(v) || 0}" style="flex:0 0 110px"><span class="hint" style="margin:0 0 0 10px">${item.hint}</span>`;
+      box.appendChild(div);
+      div.querySelector('input').addEventListener('input', e => { sw[item.key] = parseInt(e.target.value, 10) || 0; markDirty(); });
+    } else if(item.type === 'list'){
+      const div = document.createElement('div');
+      div.innerHTML = `<label>${item.label}</label><input type="text" placeholder="用逗号分隔"><div class="hint" style="margin-top:4px">${item.hint}</div>`;
+      box.appendChild(div);
+      const inp = div.querySelector('input');
+      inp.value = (v || []).join(', ');
+      inp.addEventListener('input', e => {
+        sw[item.key] = e.target.value.split(/[,，]/).map(s => s.trim()).filter(Boolean);
+        markDirty();
+      });
+    }
+  });
+}
+
+function render(){
+  document.getElementById('p_char').value = cfg.persona.character || '';
+  updateCharState();
+  document.getElementById('p_name').value  = cfg.persona.name || '';
+  document.getElementById('p_intro').value = cfg.persona.selfIntro || '';
+  document.getElementById('p_tone').value  = cfg.persona.tone || '';
+  document.getElementById('p_note').value  = cfg.persona.systemNote || '';
+    // 时长上限统一走「初筛开关」卡片
+    // renderSwitches 已合并进「初筛开关」
+
+  renderList('knows',        cfg.persona.knowsAboutMe, '它对你的了解');
+  renderList('forbidden',    cfg.persona.forbiddenTopics, '禁止话题');
+  renderList('blocked',      cfg.rules.blocked, '硬禁区', true);
+
+  document.getElementById('l_out').value  = cfg.limits.dailyOutgoingCap;
+  document.getElementById('l_reply').value = cfg.limits.dailyReplyCap ?? 20;
+  document.getElementById('l_rec').value  = cfg.limits.maxRecipientsPerVideo;
+  document.getElementById('l_cool').value = cfg.limits.sameVideoCooldownHours;
+  document.getElementById('l_min').value  = cfg.limits.sessionMinutesMax;
+  document.getElementById('l_histchars').value = cfg.limits.historyChars ?? 3000;
+  document.getElementById('l_histmsgs').value  = cfg.limits.historyMsgs ?? 30;
+  document.getElementById('l_vdedupe').value = cfg.limits.videoDedupeHours ?? 1;
+
+  renderFriends();
+}
+
+function renderList(id, arr, label, locked){
+  const box = document.getElementById(id);
+  box.innerHTML = '';
+  (arr || []).forEach((v, i) => {
+    const row = document.createElement('div');
+    row.className = 'item';
+    const ta = document.createElement('textarea');
+    ta.rows = 1;
+    ta.value = v;
+    ta.readOnly = !!locked;
+    if(!locked){
+      ta.addEventListener('input', () => {
+        const target = targetArray(id);
+        target[i] = ta.value;
+        markDirty();
+      });
+    }
+    row.appendChild(ta);
+    if(!locked){
+      const del = document.createElement('button');
+      del.className = 'danger';
+      del.textContent = '删';
+      del.onclick = () => { targetArray(id).splice(i,1); render(); markDirty(); };
+      row.appendChild(del);
+    }
+    box.appendChild(row);
+  });
+  if(!arr || arr.length === 0){
+    const p = document.createElement('p');
+    p.className = 'hint';
+    p.textContent = label ? label + '：暂无' : '暂无';
+    box.appendChild(p);
+  }
+}
+
+function targetArray(id){
+  switch(id){
+    case 'knows': return cfg.persona.knowsAboutMe;
+    case 'forbidden': return cfg.persona.forbiddenTopics;
+    case 'blocked': return cfg.rules.blocked;
+  }
+}
+
+function addItem(id, val){
+  const arr = targetArray(id);
+  arr.push(val);
+  render();
+  markDirty();
+  const box = document.getElementById(id);
+  const last = box.querySelector('.item:last-child textarea');
+  if(last) last.focus();
+}
+
+function renderFriends(){
+  const box = document.getElementById('friends-box');
+  box.innerHTML = '';
+  const list = cfg.friends || [];
+  document.getElementById('fcount').textContent = list.length + ' / 5';
+  if(list.length === 0){
+    const p = document.createElement('p');
+    p.className = 'hint';
+    p.textContent = '还没有人。加一个试试。';
+    box.appendChild(p);
+    return;
+  }
+  list.forEach((f, i) => {
+    const d = document.createElement('div');
+    d.className = 'friend';
+    d.innerHTML = `
+      <div class="grid2">
+        <div><label>名字/昵称（必须与抖音面板里显示的一致）</label><input type="text" data-f="name" data-i="${i}"></div>
+        <div><label>抖音号（只作备注，面板里读不到）</label><input type="text" data-f="douyinId" data-i="${i}"></div>
+      </div>
+      <label>他喜欢什么</label>
+      <input type="text" data-f="note" data-i="${i}">
+      <label>绝不能发给他什么</label>
+      <input type="text" data-f="neverSend" data-i="${i}">
+      <label class="verify">
+        <input type="checkbox" data-f="verified" data-i="${i}" data-bool="1">
+        <span>已验证 —— 只有勾了的人才会被发送（未勾 = 永不发送）</span>
+      </label>
+    `;
+    box.appendChild(d);
+    d.querySelectorAll('input').forEach(inp => {
+      const key = inp.dataset.f;
+      const isBool = inp.dataset.bool === '1';
+      if (isBool) inp.checked = f[key] === true;
+      else inp.value = f[key] || '';
+      const ev = isBool ? 'change' : 'input';
+      inp.addEventListener(ev, () => {
+        cfg.friends[i][key] = isBool ? inp.checked : inp.value;
+        markDirty();
+      });
+    });
+    const del = document.createElement('button');
+    del.className = 'danger';
+    del.textContent = '删除这个人';
+    del.style.marginTop = '10px';
+    del.onclick = () => { cfg.friends.splice(i,1); render(); markDirty(); };
+    d.appendChild(del);
+  });
+}
+
+function addFriend(){
+  if((cfg.friends||[]).length >= 5){ toast('最多 5 个', 'bad'); return; }
+  cfg.friends.push({name:'', douyinId:'', note:'', neverSend:'', verified:false});
+  render();
+  markDirty();
+}
+
+function collect(){
+  cfg.persona.character  = document.getElementById('p_char').value.trim();
+  cfg.persona.name       = document.getElementById('p_name').value.trim();
+  cfg.persona.selfIntro  = document.getElementById('p_intro').value.trim();
+  cfg.persona.tone       = document.getElementById('p_tone').value.trim();
+  cfg.persona.systemNote = document.getElementById('p_note').value.trim();
+    // 时长上限统一走「初筛开关」卡片
+  // 老字段与新开关保持同步，避免出现两个"时长上限"各说各话
+  cfg.rules.switches = cfg.rules.switches || {};
+  cfg.rules.switches.maxDurationSeconds = cfg.rules.maxDurationSeconds;
+
+  const num = id => { const v = parseInt(document.getElementById(id).value, 10); return Number.isFinite(v) ? v : 0; };
+  cfg.limits.dailyOutgoingCap      = num('l_out');
+  cfg.limits.dailyReplyCap       = num('l_reply');
+  cfg.limits.maxRecipientsPerVideo = num('l_rec');
+  cfg.limits.sameVideoCooldownHours= num('l_cool');
+  cfg.limits.sessionMinutesMax     = num('l_min');
+  cfg.limits.historyChars = Math.max(500, Math.min(20000, num('l_histchars') || 3000));
+  cfg.limits.historyMsgs  = Math.max(3, Math.min(100, num('l_histmsgs') || 30));
+  cfg.limits.videoDedupeHours = Math.max(0, Math.min(168, num('l_vdedupe')));
+
+  // 清掉空条目，避免保存一堆空行
+  const clean = a => a.map(s => String(s).trim()).filter(Boolean);
+  cfg.persona.knowsAboutMe    = clean(cfg.persona.knowsAboutMe);
+  cfg.persona.forbiddenTopics = clean(cfg.persona.forbiddenTopics);
+  cfg.friends = (cfg.friends||[]).filter(f => String(f.name||'').trim() || String(f.douyinId||'').trim());
+  return cfg;
+}
+
+async function save(){
+  const autoSec = document.getElementById('auto');
+  if (autoSec && autoSec.classList.contains('on')) { return saveAuto(); }
+  const btn = document.getElementById('save');
+  btn.disabled = true;
+  try{
+    const body = JSON.stringify(collect());
+    const r = await fetch('/api/config', {method:'POST', headers:{'content-type':'application/json'}, body});
+    const j = await r.json();
+    if(!j.ok){
+      toast('没保存：' + (j.detail ? j.detail.join('；') : j.error), 'bad');
+      return;
+    }
+    markDirty(false);
+    toast('已保存 ' + new Date(j.savedAt).toLocaleTimeString('zh-CN'));
+  }catch(e){
+    toast('保存失败：' + e.message, 'bad');
+  }finally{
+    btn.disabled = false;
+  }
+}
+document.querySelectorAll('nav button[data-tab]').forEach(b => {
+  b.onclick = () => {
+    const sec = document.getElementById(b.dataset.tab);
+    if (!sec) return;                       // 没有对应页签就不动，避免整页被清空
+    document.querySelectorAll('nav button').forEach(x => x.classList.remove('on'));
+    document.querySelectorAll('section').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    sec.classList.add('on');
+    const pn = document.getElementById('pageName');
+    if (pn) pn.textContent = (b.textContent || '').trim();
+    document.title = '抖音 AI 代理人 · ' + (b.textContent || '').trim();
+    setTimeout(() => { try { window.collapseCards && window.collapseCards(); } catch {} }, 60);   // 切页签后重量高度：隐藏时量不出来
+  };
+});
+
+window.addEventListener('beforeunload', e => {
+  if(dirty){ e.preventDefault(); e.returnValue = ''; }
+});
+
+load();
+/* ---------- 运行面板 ---------- */
+const EV_LABEL = {
+  start: ["▶ 启动", "var(--ok)"],
+  stop: ["■ 停止", "var(--dim)"],
+  recv: ["📥 收到", "var(--accent)"],
+  reply: ["✍ 生成", "#b48cff"],
+  blocked: ["⛔ 拦下", "var(--bad)"],
+  sent: ["✅ 已发送", "var(--ok)"],
+  "send-failed": ["❌ 发送失败", "var(--bad)"],
+  preview: ["👁 预演（未发）", "var(--warn)"],
+  skip: ["… 跳过", "var(--dim)"],
+  idle: ["· 空闲", "var(--dim)"],
+  error: ["⚠ 错误", "var(--bad)"],
+};
+
+function fmtEvent(e){
+  const [label, color] = EV_LABEL[e.type] || [e.type, "var(--dim)"];
+  const t = new Date(e.ts).toLocaleTimeString('zh-CN');
+  let detail = "";
+  if(e.type === "recv") detail = e.text;
+  else if(e.type === "reply") detail = `「${e.draft}」` + (e.usage ? ` (${e.usage.prompt_tokens||0}+${e.usage.completion_tokens||0} tok)` : "");
+  else if(e.type === "blocked") detail = `${e.why}｜草稿「${e.draft}」`;
+  else if(e.type === "sent" || e.type === "send-failed") detail = `「${e.draft}」`;
+  else if(e.type === "preview") detail = `「${e.draft}」`;
+  else if(e.type === "skip") detail = e.reason + (e.waitSec ? ` ${e.waitSec}s` : "");
+  else if(e.type === "idle") detail = e.handled ? "这条已处理过" : (e.lastSide === "SENT" ? "最新一条是我发的" : "");
+  else if(e.type === "error") detail = `${e.stage}：${e.message}`;
+  else if(e.type === "start") detail = `${e.interval}s 一次${e.send ? "，真发" : "，只预演"}`;
+  return `<div><span style="color:var(--dim)">${t}</span>　<span style="color:${color}">${label}</span>　<span style="color:var(--fg)">${escapeHtml((detail||"").slice(0,120))}</span></div>`;
+}
+
+async function refreshStatus(){
+  try{
+    const r = await fetch('/api/status');
+    const j = await r.json();
+    if(!j.ok) return;
+    renderCodeHint(j);
+    const badge = document.getElementById('runBadge');
+    if(j.runner){
+      badge.textContent = `运行中 · pid ${j.runner.pid}${j.runner.send ? ' · 真发' : ' · 预演'}`;
+  // 上次退出原因 + 最近日志（"自动停止"必须能查到为什么）
+  // 注意：只更新文字，不重建节点 —— 否则 <details> 的展开状态每 3 秒被重置（会觉得"日志自己关了"）
+  const rex = document.getElementById("runnerExit");
+  if (rex) {
+    if (rex.dataset.built !== "1") {
+      rex.innerHTML = "<div id=\"reExitLine\"></div>" +
+        "<details id=\"reLogWrap\" style=\"margin-top:6px\"><summary style=\"cursor:pointer;color:var(--dim)\">最近日志（点开，刷新不会自动收起）</summary>" +
+        "<pre id=\"reLog\" style=\"margin:6px 0 0;white-space:pre-wrap;font-size:11.5px;line-height:1.6;max-height:220px;overflow:auto\"></pre></details>";
+      rex.dataset.built = "1";
+    }
+    const le = j.lastExit;
+    const alive = j.runner;
+    const line = document.getElementById("reExitLine");
+    if (line) {
+      if (le && !alive) {
+        const up = le.uptimeSec != null ? (le.uptimeSec + " 秒") : "?";
+        line.innerHTML = "<b style=\"color:var(--bad)\">上次退出：</b>" + escapeHtml(le.reason) +
+          "（运行了 " + up + "，时间 " + escapeHtml(String(le.ts||"").replace("T"," ").slice(0,19)) + "）" +
+          (le.detail ? "<br>　" + escapeHtml(le.detail) : "");
+      } else {
+        line.innerHTML = "";
+      }
+    }
+    const tail = (j.runnerLogTail || []).slice(-8);
+    const wrap = document.getElementById("reLogWrap");
+    const pre = document.getElementById("reLog");
+    if (wrap && pre) {
+      wrap.style.display = tail.length ? "" : "none";
+      const txt = tail.join("\n");
+      if (pre.textContent !== txt) pre.textContent = txt;
+    }
+  }
+      badge.style.background = '#2c5c45'; badge.style.color = 'var(--ok)';
+    } else {
+      badge.textContent = '已停止';
+      badge.style.background = '#252a35'; badge.style.color = 'var(--dim)';
+    }
+    document.getElementById('runModel').textContent = j.llm.dry ? '未配置 key（dry）' : (j.llm.model || '?');
+    document.getElementById('runUsage').textContent = `${j.usage.calls} / ${j.usage.sent}`;
+    document.getElementById('runTokens').textContent = `${j.usage.promptTokens} / ${j.usage.completionTokens}`;
+    const box = document.getElementById('events');
+    const list = (j.events || []).filter(e => e.type !== 'idle').slice(-40).reverse();
+    const html = list.length ? list.map(fmtEvent).join('') : '<span class="hint">还没有记录。启动后它每一步都会出现在这里。</span>';
+    if (box.dataset.lastHtml !== html) {
+      // 跟转发输出一样：翻上去看的时候别把他拽回来
+      const stick = box.scrollHeight - box.scrollTop - box.clientHeight < 60;
+      box.dataset.lastHtml = html;
+      box.innerHTML = html;
+      if (stick) box.scrollTop = box.scrollHeight;
+    }
+  }catch(e){ /* 静默 */ }
+}
+
+async function startRun(send){
+  if(send && !confirm('真的开始自动回复吗？它会自己给白名单里的人发消息。')){
+    return;
+  }
+  try{
+    const r = await fetch('/api/run', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({action:'start', send})});
+    const j = await r.json();
+    if(!j.ok) toast(j.error || '启动失败', 'bad');
+    else toast(send ? `已启动（真发），pid ${j.started}` : `已启动（预演），pid ${j.started}`);
+    refreshStatus();
+  }catch(e){ toast('启动失败：' + e.message, 'bad'); }
+}
+
+async function stopRun(){
+  try{
+    const r = await fetch('/api/run', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({action:'stop'})});
+    const j = await r.json();
+    toast(j.ok ? '已停止' : (j.error || '停止失败'), j.ok ? '' : 'bad');
+    refreshStatus();
+  }catch(e){ toast('停止失败：' + e.message, 'bad'); }
+}
+
+setInterval(refreshStatus, 2000);
+setTimeout(refreshStatus, 500);
+
+/* ---------- 转发面板 ---------- */
+async function refreshDigest() {
+  try {
+    const r = await fetch('/api/digest/status');
+    const j = await r.json();
+    if (!j.ok) return;
+    const badge = document.getElementById('digestState');
+    if (j.running) {
+      badge.textContent = '跑着… pid ' + j.running.pid + (j.running.params && j.running.params.send ? ' · 真发' : ' · 预演');
+      badge.style.color = 'var(--ok)';
+    } else {
+      badge.textContent = '空闲';
+      badge.style.color = 'var(--dim)';
+    }
+    const pre = document.getElementById('digestLog');
+    if (j.log && pre.textContent !== j.log) {
+      // 只有他本来就在底部时才自动跟随；往上翻着看就一直停在那儿
+      const stick = pre.scrollHeight - pre.scrollTop - pre.clientHeight < 60;
+      pre.textContent = j.log;
+      if (stick) pre.scrollTop = pre.scrollHeight;
+    }
+  } catch (e) { showErr(e, 'refreshDigest'); }
+}
+
+async function startDigest(send) {
+  const max = parseInt(document.getElementById('d_max').value, 10) || 6;
+  const top = parseInt(document.getElementById('d_top').value, 10) || 1;
+  const only = document.getElementById('d_only').value || null;
+  const who = only || '白名单全部';
+  if (send && !confirm('真的要转发吗？扫 ' + max + ' 条，最多转 ' + top + ' 条，收件人：' + who)) return;
+  try {
+    const r = await fetch('/api/digest', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ max, top, only, send })
+    });
+    const j = await r.json();
+    if (!j.ok) { toast(j.error || '启动失败', 'bad'); return; }
+    toast(send ? '已开始真发' : '已开始预演');
+    refreshDigest();
+  } catch (e) { toast('启动失败：' + e.message, 'bad'); }
+}
+
+function fillRecipients() {
+  const sel = document.getElementById('d_only');
+  if (!sel || !cfg || !cfg.friends) return;
+  const cur = sel.value;
+  let html = '<option value="">白名单全部</option>';
+  cfg.friends
+    .filter(f => f.verified === true && String(f.name || '').trim())
+    .forEach(f => { html += '<option value="' + f.name + '">只发给 ' + f.name + '</option>'; });
+  sel.innerHTML = html;
+  sel.value = cur || '';
+}
+
+setInterval(refreshDigest, 2000);
+setTimeout(function () { refreshDigest(); fillRecipients(); }, 800);
+/* ---------- 自动页：概率转发 / 主动聊天 / 记忆 / 重置 ---------- */
+// 记忆区：每个会话默认只显示 5 条，展开状态记在这里（refreshAuto 重建 DOM 也不会收回去）
+let memExpanded = {};
+function toggleMem(conv) {
+  memExpanded[conv] = !memExpanded[conv];
+  refreshAuto();
+}
+
+let AUTO = {};
+
+function fmtAgo(ts) {
+  if (!ts) return '从未';
+  const m = Math.round((Date.now() - Number(ts)) / 60000);
+  if (m < 1) return '刚刚';
+  if (m < 60) return m + ' 分钟前';
+  return Math.round(m / 60) + ' 小时前';
+}
+
+async function refreshAuto() {
+  try {
+    const r = await fetch('/api/schedule');
+    const j = await r.json();
+    if (!j.ok) return;
+    AUTO = j;
+
+    const d = j.digest || {};
+    const p = j.proactive || {};
+    const sc = j.schedule || { digest: {}, proactive: {} };
+
+    document.getElementById('dg_en').checked = d.enabled !== false;
+    document.getElementById('dg_chance').value = d.chance ?? 0.2;
+    document.getElementById('dg_every').value = d.everyMin ?? 90;
+    document.getElementById('dg_cap').value = d.perDayMax ?? 2;
+    document.getElementById('dg_max').value = d.max ?? 6;
+    { const r = document.getElementById('dg_route'); if (r) r.value = (cfg.digest && cfg.digest.route) || 'fit'; }
+    document.getElementById('dg_top').value = d.top ?? 1;
+    document.getElementById('dgStat').textContent =
+      '今天 ' + (sc.digest.count || 0) + '/' + (d.perDayMax ?? 2) + ' 轮｜上次检查 ' + fmtAgo(sc.digest.lastCheck);
+
+    document.getElementById('pa_en').checked = p.enabled !== false;
+    document.getElementById('pa_chance').value = p.chance ?? 0.15;
+    document.getElementById('pa_every').value = p.everyMin ?? 60;
+    document.getElementById('pa_cap').value = p.perDayMax ?? 3;
+    document.getElementById('pa_perconv').value = p.perConvPerDayMax ?? 1;
+    document.getElementById('pa_idle').value = p.idleHours ?? 4;
+    document.getElementById('pa_quiet').value = p.quietHours ?? '';
+    document.getElementById('pa_reqmem').checked = p.requireMemory !== false;
+    const per = sc.proactive.perConv || {};
+    const perTxt = Object.keys(per).map(k => k + ' ' + per[k]).join('、') || '无';
+    document.getElementById('paStat').textContent =
+      '今天 ' + (sc.proactive.count || 0) + '/' + (p.perDayMax ?? 3) + ' 次（' + perTxt + '）｜上次检查 ' + fmtAgo(sc.proactive.lastCheck);
+
+    const mem = j.memory || [];
+    const box = document.getElementById('memList');
+    if (!mem.length) {
+      box.innerHTML = '<span class="hint">还没有任何记忆。它在聊天中会自己攒。</span>';
+    } else {
+      box.innerHTML = mem.map(function (m) {
+        var clearBtn = '<button class="ghost clr" style="padding:2px 8px;font-size:11.5px" onclick="resetWhat(\'memory:' + escapeHtml(m.conv) + '\',\'清空这个会话的记忆？\')">清空</button>';
+        var head = '<div class="mem-group-head"><b>' + escapeHtml(m.conv) + '</b><span class="cnt">' + m.count + ' 条</span>' + clearBtn + '</div>';
+
+        var LIMIT = 5;
+        var all = m.facts || [];
+        var expanded = !!memExpanded[m.conv];
+        var shown = expanded ? all : all.slice(0, LIMIT);
+
+        var rows = shown.map(function (f) {
+          var safe = String(f).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+          var ops = '<span class="ops">' +
+            '<button onclick="editMemory(\'' + m.conv + '\',\'' + safe + '\')">改</button>' +
+            '<button class="del" onclick="delMemory(\'' + m.conv + '\',\'' + safe + '\')">删</button>' +
+            '</span>';
+          return '<div class="mem-row"><span class="txt">· ' + escapeHtml(f) + '</span>' + ops + '</div>';
+        }).join('');
+
+        var more = '';
+        if (all.length > LIMIT) {
+          var rest = all.length - LIMIT;
+          more = '<button class="mem-more" onclick="toggleMem(\'' + m.conv + '\')">' +
+            (expanded ? '收起 ▴' : '展开剩余 ' + rest + ' 条 ▾') + '</button>';
+        }
+        return '<div class="mem-group">' + head + rows + more + '</div>';
+      }).join('');
+    }
+  } catch (e) { showErr(e, 'refreshAuto'); }
+}
+
+async function saveAuto() {
+  if (!cfg) { toast('配置还没载入', 'bad'); return; }
+  cfg.digest = cfg.digest || {};
+  cfg.proactive = cfg.proactive || {};
+  const num = (id) => parseFloat(document.getElementById(id).value) || 0;
+  const int = (id) => parseInt(document.getElementById(id).value, 10) || 0;
+
+  cfg.digest.enabled = document.getElementById('dg_en').checked;
+  cfg.digest.chance = Math.min(1, Math.max(0, num('dg_chance')));
+  cfg.digest.everyMin = Math.max(1, int('dg_every'));
+  cfg.digest.perDayMax = Math.max(0, int('dg_cap'));
+  cfg.digest.max = Math.min(30, Math.max(1, int('dg_max')));
+  cfg.digest.top = Math.min(5, Math.max(1, int('dg_top')));
+    { const r = document.getElementById('dg_route'); cfg.digest.route = r && r.value === 'all' ? 'all' : 'fit'; }
+
+  cfg.proactive.enabled = document.getElementById('pa_en').checked;
+  cfg.proactive.chance = Math.min(1, Math.max(0, num('pa_chance')));
+  cfg.proactive.everyMin = Math.max(1, int('pa_every'));
+  cfg.proactive.perDayMax = Math.max(0, int('pa_cap'));
+  cfg.proactive.perConvPerDayMax = Math.max(0, int('pa_perconv'));
+  cfg.proactive.idleHours = Math.max(0, num('pa_idle'));
+  cfg.proactive.quietHours = document.getElementById('pa_quiet').value.trim();
+  cfg.proactive.requireMemory = document.getElementById('pa_reqmem').checked;
+
+  try {
+    const r = await fetch('/api/config', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(cfg)
+    });
+    const j = await r.json();
+    if (!j.ok) { toast('保存失败：' + (j.detail ? j.detail.join('；') : j.error), 'bad'); return; }
+    toast('已保存，下一轮检查就生效');
+    refreshAuto();
+  } catch (e) { toast('保存失败：' + e.message, 'bad'); }
+}
+
+async function resetWhat(what, question) {
+  if (!confirm(question || ('确定重置 ' + what + ' ？'))) return;
+  try {
+    const r = await fetch('/api/reset', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ what })
+    });
+    const j = await r.json();
+    if (!j.ok) { toast(j.error || '重置失败', 'bad'); return; }
+    toast((j.done || []).join('；'));
+    refreshAuto();
+  } catch (e) { toast('重置失败：' + e.message, 'bad'); }
+}
+
+setInterval(refreshAuto, 5000);
+setTimeout(refreshAuto, 900);
+/* ---------- 角色卡状态提示：非空时下面的短字段是失效的 ---------- */
+function updateCharState() {
+  const ta = document.getElementById('p_char');
+  const badge = document.getElementById('charBadge');
+  const shortBadge = document.getElementById('shortBadge');
+  const cnt = document.getElementById('charCount');
+  if (!ta) return;
+  const len = ta.value.trim().length;
+  if (cnt) cnt.textContent = '当前 ' + len + ' 字';
+  if (badge) {
+    badge.textContent = len ? '生效中' : '空（用下面的短字段）';
+    badge.style.color = len ? 'var(--ok)' : 'var(--dim)';
+  }
+  if (shortBadge) {
+    shortBadge.textContent = len ? '⚠ 角色卡非空，这里改了不生效' : '生效中';
+    shortBadge.style.color = len ? 'var(--bad)' : 'var(--ok)';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const ta = document.getElementById('p_char');
+  if (ta) ta.addEventListener('input', updateCharState);
+});
+setTimeout(function () {
+  const ta = document.getElementById('p_char');
+  if (ta && !ta.dataset.bound) {
+    ta.dataset.bound = '1';
+    ta.addEventListener('input', updateCharState);
+    updateCharState();
+  }
+}, 1200);
+
+async function restoreDefaultCharacter() {
+  if (!confirm('用默认角色卡覆盖当前内容？（只是填进输入框，点保存才生效）')) return;
+  try {
+    const r = await fetch('/api/character/default');
+    const j = await r.json();
+    if (!j.ok) { toast('取默认卡失败', 'bad'); return; }
+    document.getElementById('p_char').value = j.text;
+    updateCharState();
+    toast('已填入默认角色卡，点保存生效');
+  } catch (e) { toast('取默认卡失败：' + e.message, 'bad'); }
+}
+function fillMemConv() {
+  const sel = document.getElementById("memConv");
+  if (!sel || !cfg || !cfg.friends) return;
+  const cur = sel.value;
+  sel.innerHTML = "";                       // 先清空，再填：顺序颠倒会把刚加的选项一起清掉
+  cfg.friends.filter(function (f) { return f.verified === true && String(f.name || "").trim(); })
+    .forEach(function (f) {
+      var o = document.createElement("option");
+      o.value = f.name;
+      o.textContent = f.name;
+      sel.appendChild(o);
+    });
+  if (cur) sel.value = cur;
+}
+async function backfillMemory() {
+  if (!confirm("从历史对话里抽取记忆？\n只读过去的聊天记录，抽取结果会经过严格过滤（可能一条都抽不到）。\n大约需要 10~30 秒。")) return;
+  const btn = event && event.target;
+  if (btn) { btn.disabled = true; btn.textContent = "抽取中…"; }
+  try {
+    const r = await fetch("/api/memory/backfill", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+    const j = await r.json();
+    if (!j.ok) { toast(j.error || "失败", "bad"); return; }
+    if (!j.added || !j.added.length) { toast("没有新的可记内容（都是闲聊）"); }
+    else { toast("补了 " + j.added.length + " 条记忆"); }
+    refreshAuto();
+  } catch (e) { toast("失败：" + e.message, "bad"); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = "从历史对话补记忆"; } }
+}
+async function addMemory() {
+  const conv = document.getElementById("memConv").value;
+  const text = document.getElementById("memText").value.trim();
+  if (!conv) { toast("先在白名单里加人", "bad"); return; }
+  if (!text) { toast("写点内容", "bad"); return; }
+  try {
+    const r = await fetch("/api/memory", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ conv, text }) });
+    const j = await r.json();
+    if (!j.ok) { toast(j.error || "失败", "bad"); return; }
+    toast(j.added ? ("已记住，共 " + j.total + " 条") : "这条已经记过了");
+    document.getElementById("memText").value = "";
+    refreshAuto();
+  } catch (e) { toast("失败：" + e.message, "bad"); }
+}
+
+setTimeout(fillMemConv, 1500);
+/* ---------- 人设试聊（不发送） ---------- */
+function fillTryConv() {
+  const sel = document.getElementById("tryConv");
+  if (!sel || !cfg || !cfg.friends) return;
+  const cur = sel.value;
+  sel.innerHTML = "";
+  const first = document.createElement("option");
+  first.value = "";
+  first.textContent = "（不指定，也不带记忆）";
+  sel.appendChild(first);
+  cfg.friends.filter(function (f) { return f.verified === true && String(f.name || "").trim(); })
+    .forEach(function (f) {
+      const o = document.createElement("option");
+      o.value = f.name;
+      o.textContent = f.name;
+      sel.appendChild(o);
+    });
+  if (cur) sel.value = cur;
+}
+
+async function trySay() {
+  const text = (document.getElementById("tryText").value || "").trim();
+  const conv = document.getElementById("tryConv").value || "";
+  const memory = document.getElementById("tryMem").checked;
+  const box = document.getElementById("tryOut");
+  if (!text) { toast("写一句话", "bad"); return; }
+  box.innerHTML = '<span class="hint">生成中…</span>';
+  try {
+    const r = await fetch("/api/try", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text, conv, memory })
+    });
+    const j = await r.json();
+    if (!j.ok) { box.innerHTML = '<span style="color:var(--bad)">失败：' + escapeHtml(j.error || "未知") + "</span>"; return; }
+    let html = "";
+    (j.checked || []).forEach(function (c, i) {
+      const okMark = c.gate && c.gate.ok
+        ? '<span style="color:var(--ok)">✓ 过安检</span>'
+        : '<span style="color:var(--bad)">✗ ' + escapeHtml((c.gate && c.gate.why) || "被拦") + "</span>";
+      html += '<div style="margin-bottom:6px"><b>第 ' + (i + 1) + " 条：</b>" + escapeHtml(c.text) + "　" + okMark + "</div>";
+    });
+    html += '<div class="hint" style="margin-top:8px">提示词 ' + j.sysLen + " 字符｜记忆：" + (j.hasMemory ? "已带入" : "未带入");
+    if (j.usage) html += "｜token " + (j.usage.total_tokens || "?");
+    html += "</div>";
+    box.innerHTML = html;
+  } catch (e) {
+    box.innerHTML = '<span style="color:var(--bad)">失败：' + escapeHtml(e.message) + "</span>";
+  }
+}
+
+/* ---------- 体检 ---------- */
+async function runHealth() {
+  const box = document.getElementById("healthOut");
+  if (!box) return;
+  box.innerHTML = '<span class="hint">检查中…（要连浏览器，可能几秒）</span>';
+  try {
+    const r = await fetch("/api/health");
+    const j = await r.json();
+    const color = { ok: "var(--ok)", warn: "var(--warn, #d9a441)", bad: "var(--bad)" };
+    const mark = { ok: "✓", warn: "!", bad: "✗" };
+    box.innerHTML = j.checks.map(function (c) {
+      return '<div style="margin-bottom:4px"><span style="color:' + (color[c.status] || "var(--dim)") + ';font-weight:600">' +
+        (mark[c.status] || "?") + "</span>　" + escapeHtml(c.name) +
+        (c.detail ? '　<span style="color:var(--dim)">' + escapeHtml(c.detail) + "</span>" : "") + "</div>";
+    }).join("");
+  } catch (e) {
+    box.innerHTML = '<span style="color:var(--bad)">体检失败：' + escapeHtml(e.message) + "</span>";
+  }
+}
+
+setTimeout(function () { fillTryConv(); }, 1600);
+
+async function editMemory(conv, from) {
+  const to = prompt("改成什么？（留空 = 删除）", from);
+  if (to === null) return;
+  try {
+    const r = await fetch("/api/memory/edit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ conv: conv, from: from, to: to.trim() === "" ? null : to.trim() }) });
+    const j = await r.json();
+    if (!j.ok) { toast(j.error || "失败", "bad"); return; }
+    toast(j.action === "delete" ? "已删除" : "已修改");
+    refreshAuto();
+  } catch (e) { toast("失败：" + e.message, "bad"); }
+}
+
+async function delMemory(conv, from) {
+  if (!confirm("删掉这条记忆？\\n" + from)) return;
+  try {
+    const r = await fetch("/api/memory/edit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ conv: conv, from: from }) });
+    const j = await r.json();
+    if (!j.ok) { toast(j.error || "失败", "bad"); return; }
+    toast("已删除");
+    refreshAuto();
+  } catch (e) { toast("失败：" + e.message, "bad"); }
+}
+/* ---------- 模型通道（API Key） ---------- */
+async function refreshLlm() {
+  try {
+    const r = await fetch("/api/llm");
+    const j = await r.json();
+    if (!j.ok) return;
+    document.getElementById("llmBase").value = j.baseUrl || "";
+    document.getElementById("llmModel").value = j.model || "";
+    const badge = document.getElementById("llmBadge");
+    if (j.hasKey) {
+      badge.textContent = "已配置 " + j.keyMasked + (j.fromEnv ? "（来自环境变量）" : "");
+      badge.style.color = "var(--ok)";
+    } else {
+      badge.textContent = "未配置（dry 模式，不会真调模型）";
+      badge.style.color = "var(--bad)";
+    }
+    document.getElementById("llmKey").value = "";
+  } catch (e) { showErr(e, 'refreshLlm'); }
+}
+
+async function saveLlm() {
+  const apiKey = document.getElementById("llmKey").value.trim();
+  const baseUrl = document.getElementById("llmBase").value.trim();
+  const model = document.getElementById("llmModel").value.trim();
+  if (!apiKey && !baseUrl && !model) { toast("没填东西", "bad"); return; }
+  if (apiKey && !/^sk-/.test(apiKey)) {
+    if (!confirm("这个 key 不是 sk- 开头，确定要保存吗？")) return;
+  }
+  try {
+    const r = await fetch("/api/llm", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ apiKey, baseUrl, model })
+    });
+    const j = await r.json();
+    if (!j.ok) { toast(j.error || "保存失败", "bad"); return; }
+    toast("已保存到 state/llm.json");
+    refreshLlm();
+  } catch (e) { toast("保存失败：" + e.message, "bad"); }
+}
+
+async function testLlm() {
+  const out = document.getElementById("llmOut");
+  out.textContent = "测试中…";
+  out.style.color = "var(--dim)";
+  try {
+    const r = await fetch("/api/llm/test", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+    const j = await r.json();
+    if (j.ok) {
+      out.textContent = "通 ✓ " + (j.model || "") + " 回了「" + (j.text || "") + "」" + (j.usage ? "  token " + (j.usage.total_tokens || "?") : "");
+      out.style.color = "var(--ok)";
+    } else {
+      out.textContent = "失败：" + (j.error || "未知");
+      out.style.color = "var(--bad)";
+    }
+  } catch (e) {
+    out.textContent = "失败：" + e.message;
+    out.style.color = "var(--bad)";
+  }
+}
+
+setTimeout(refreshLlm, 1200);
+/* ---------- 评分制判据 ---------- */
+function renderScoring() {
+  if (!cfg || !cfg.rules) return;
+  const sc = cfg.rules.scoring || {};
+  document.getElementById("sc_en").checked = sc.enabled !== false;
+  document.getElementById("sc_sendAt").value = sc.sendAt ?? 18;
+  document.getElementById("sc_minPlus").value = sc.minPlus ?? 1;
+  document.getElementById("scBadge").textContent =
+    sc.enabled === false ? "已关闭（走旧的是非判定）" : "已启用 · 加 " + (sc.plus || []).length + " 条 / 减 " + (sc.minus || []).length + " 条";
+  const groups = {};
+  (sc.plus || []).forEach(function (x) { (groups[x.cat] = groups[x.cat] || { plus: [], minus: [] }).plus.push(x); });
+  (sc.minus || []).forEach(function (x) { (groups[x.cat] = groups[x.cat] || { plus: [], minus: [] }).minus.push(x); });
+  let html = "";
+  Object.keys(groups).forEach(function (cat) {
+    const g = groups[cat];
+    html += '<div style="margin:8px 0"><b>' + escapeHtml(cat) + "</b>";
+    g.plus.forEach(function (x) {
+      html += '<div style="color:var(--ok)">+' + x.pts[0] + "~" + x.pts[1] + "　" + escapeHtml(x.item) + '　<span style="color:var(--dim)">' + escapeHtml(x.how || "") + "</span></div>";
+    });
+    g.minus.forEach(function (x) {
+      html += '<div style="color:var(--bad)">-' + x.pts[0] + "~" + x.pts[1] + "　" + escapeHtml(x.item) + (x.veto ? "（一票否决）" : "") + '　<span style="color:var(--dim)">' + escapeHtml(x.how || "") + "</span></div>";
+    });
+    html += "</div>";
+  });
+  document.getElementById("scTable").innerHTML = html || '<span class="hint">还没有评分表</span>';
+}
+
+function toggleScoringTable() {
+  const box = document.getElementById("scEditor");
+  const ta = document.getElementById("scJson");
+  if (box.style.display === "none") {
+    const sc = (cfg.rules && cfg.rules.scoring) || {};
+    ta.value = JSON.stringify({ plus: sc.plus || [], minus: sc.minus || [] }, null, 2);
+    box.style.display = "block";
+  } else {
+    box.style.display = "none";
+  }
+}
+
+async function saveScoring() {
+  if (!cfg) { toast("配置还没载入", "bad"); return; }
+  cfg.rules = cfg.rules || {};
+  cfg.rules.scoring = cfg.rules.scoring || {};
+  cfg.rules.scoring.enabled = document.getElementById("sc_en").checked;
+  cfg.rules.scoring.sendAt = Number(document.getElementById("sc_sendAt").value || 18);
+  cfg.rules.scoring.minPlus = Number(document.getElementById("sc_minPlus").value || 1);
+  await save();
+  renderScoring();
+  toast("门槛已保存");
+}
+
+async function saveScoringTable() {
+  const ta = document.getElementById("scJson");
+  let obj;
+  try { obj = JSON.parse(ta.value); } catch (e) { toast("JSON 格式不对：" + e.message, "bad"); return; }
+  if (!Array.isArray(obj.plus) || !Array.isArray(obj.minus)) { toast("需要 plus 和 minus 两个数组", "bad"); return; }
+  const bad = obj.plus.concat(obj.minus).find(function (x) { return !x.id || !x.item || !Array.isArray(x.pts); });
+  if (bad) { toast("每条都要有 id / item / pts 数组", "bad"); return; }
+  cfg.rules = cfg.rules || {};
+  cfg.rules.scoring = cfg.rules.scoring || {};
+  cfg.rules.scoring.plus = obj.plus;
+  cfg.rules.scoring.minus = obj.minus;
+  await save();
+  toggleScoringTable();
+  renderScoring();
+  toast("评分表已保存（" + obj.plus.length + " 加 / " + obj.minus.length + " 减）");
+}
+
+setTimeout(function () { try { renderScoring(); } catch (e) {} }, 1800);
+setTimeout(function () { try { loadLabSwitch(); } catch (e) {} }, 1900);
+    setTimeout(function () { try { refreshLex(); } catch (e) {} }, 2100);
+    setTimeout(function () { try { loadLexSwitch(); } catch (e) {} }, 2200);
+/* ---------- 初筛开关（机械层） ---------- */
+let swCatalog = null;
+
+async function loadSwitches() {
+  const box = document.getElementById("swBox");
+  if (!box) return;
+  try {
+    const r = await fetch("/api/switches");
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || "读取失败");
+    swCatalog = j.catalog;
+    const v = j.values || {};
+    let html = '<div class="grid3">';
+    swCatalog.forEach(function (it) {
+      const cur = v[it.key];
+      if (it.type === "bool") {
+        html += '<div><label>' + escapeHtml(it.label) + '</label><br>' +
+          '<input type="checkbox" data-sw="' + it.key + '" data-type="bool" ' + (cur ? "checked" : "") +
+          ' style="width:18px;height:18px;accent-color:var(--accent)">' +
+          '<div class="hint" style="margin:4px 0 0">' + escapeHtml(it.hint || "") + "</div></div>";
+      } else if (it.type === "number") {
+        html += '<div><label>' + escapeHtml(it.label) + '</label>' +
+          '<input type="number" data-sw="' + it.key + '" data-type="number" value="' + escapeHtml(String(cur ?? 0)) + '">' +
+          '<div class="hint" style="margin:4px 0 0">' + escapeHtml(it.hint || "") + "</div></div>";
+      } else if (it.type === "list") {
+        const arr = Array.isArray(cur) ? cur.join("、") : "";
+        html += '<div><label>' + escapeHtml(it.label) + '</label>' +
+          '<input type="text" data-sw="' + it.key + '" data-type="list" value="' + escapeHtml(arr) + '" placeholder="用、或逗号分隔">' +
+          '<div class="hint" style="margin:4px 0 0">' + escapeHtml(it.hint || "") + "</div></div>";
+      } else {
+        html += '<div><label>' + escapeHtml(it.label) + '</label>' +
+          '<input type="text" data-sw="' + it.key + '" data-type="text" value="' + escapeHtml(String(cur ?? "")) + '" placeholder="留空=内置">' +
+          '<div class="hint" style="margin:4px 0 0">' + escapeHtml(it.hint || "") + "</div></div>";
+      }
+    });
+    html += "</div>";
+    box.innerHTML = html;
+  } catch (e) {
+    box.innerHTML = '<span style="color:var(--bad)">读取失败：' + escapeHtml(e.message) + "</span>";
+  }
+}
+
+async function saveSwitches() {
+  if (!cfg) { toast("配置还没载入", "bad"); return; }
+  const box = document.getElementById("swBox");
+  const next = Object.assign({}, (cfg.rules && cfg.rules.switches) || {});
+  box.querySelectorAll("[data-sw]").forEach(function (el) {
+    const key = el.getAttribute("data-sw");
+    const type = el.getAttribute("data-type");
+    if (type === "bool") next[key] = el.checked;
+    else if (type === "number") next[key] = Number(el.value || 0);
+    else if (type === "list") next[key] = String(el.value || "").split(/[、,，\s]+/).map(function (s) { return s.trim(); }).filter(Boolean);
+    else next[key] = String(el.value || "").trim();
+  });
+  cfg.rules = cfg.rules || {};
+  cfg.rules.switches = next;
+  await save();
+  toast("初筛开关已保存");
+  loadSwitches();
+}
+
+setTimeout(function () { try { loadSwitches(); } catch (e) {} }, 2000);
+
+/* ---------- 卡片折叠 ---------- */
+(function () {
+  const KEY = "dybot.cardState.v1";
+  let state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch { state = {}; }
+
+  function cardKey(card) {
+    const sec = card.closest("section");
+    const h2 = card.querySelector("h2");
+    const title = h2 ? (h2.innerText || "").replace(/\s+/g, " ").trim() : "card";
+    return (sec ? sec.id : "?") + "::" + title.slice(0, 40);
+  }
+
+  function setOpen(card, open, remember) {
+    card.classList.toggle("collapsed", !open);
+    const body = card.querySelector(".card-body");
+    if (body) body.style.display = open ? "" : "none";
+    const arrow = card.querySelector(".card-arrow");
+    if (arrow) arrow.textContent = open ? "▾" : "▸";
+    if (remember) {
+      state[cardKey(card)] = open ? 1 : 0;
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {}
+    }
+  }
+
+  function prepare(card) {
+    if (card.dataset.collapsibleReady) return;
+    const h2 = card.querySelector("h2");
+    if (!h2) return;
+    card.dataset.collapsibleReady = "1";
+
+    // 除 h2 以外的内容包进 .card-body
+    const body = document.createElement("div");
+    body.className = "card-body";
+    const movers = [];
+    card.childNodes.forEach(function (n) { if (n !== h2 && n.nodeType === 1) movers.push(n); });
+    movers.forEach(function (n) { body.appendChild(n); });
+    card.appendChild(body);
+
+    h2.style.cursor = "pointer";
+    h2.style.userSelect = "none";
+    h2.style.display = "flex";
+    h2.style.alignItems = "center";
+    h2.style.justifyContent = "flex-start";
+    const arrow = document.createElement("span");
+    arrow.className = "card-arrow";
+    arrow.style.cssText = "font-size:12px;color:var(--dim);margin-left:auto;padding-left:12px;flex:0 0 auto";
+    arrow.textContent = "▾";
+    h2.appendChild(arrow);
+
+    h2.addEventListener("click", function (e) {
+      if (e.target.closest("button,a,input,select,textarea")) return;
+      const open = card.classList.contains("collapsed");
+      setOpen(card, open, true);
+    });
+  }
+
+  function applyAll() {
+    document.querySelectorAll("section .card").forEach(function (card) {
+      prepare(card);
+      const key = cardKey(card);
+      const body = card.querySelector(".card-body");
+      if (!body) return;
+      if (state[key] !== undefined) {
+        setOpen(card, !!state[key], false);
+        return;
+      }
+      // 没记过状态：太长的默认收起（>320px），短的保持展开
+      const tall = body.scrollHeight > 320;
+      setOpen(card, !tall, false);
+      if (tall) card.dataset.autoCollapsed = "1";
+    });
+  }
+
+  // 切页签后重新量高度（隐藏页签里的卡片量出来是 0，不重量就不会自动收起）
+  document.querySelectorAll("nav button[data-tab]").forEach(function (b) {
+    b.addEventListener("click", function () { setTimeout(applyAll, 80); });
+  });
+
+  window.collapseCards = applyAll;
+  window.expandAllCards = function () {
+    document.querySelectorAll("section .card").forEach(function (c) { setOpen(c, true, true); });
+  };
+  window.collapseAllCards = function () {
+    document.querySelectorAll("section .card").forEach(function (c) { setOpen(c, false, true); });
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", applyAll);
+  } else {
+    applyAll();
+  }
+  // 异步内容（开关、评分表、记忆）渲染完再量一次高度
+  setTimeout(applyAll, 1200);
+  setTimeout(applyAll, 2600);
+})();
+/* ---------- 实验室：AI 视频总结 ---------- */
+/* ---------- 实验室：AI 视频总结（任务式 + 实时进度 + 取消） ---------- */
+let labTimer = null;
+
+function labRenderSteps(steps) {
+  const box = document.getElementById("labSteps");
+  if (!box) return;
+  box.innerHTML = "";
+  (steps || []).forEach(function (s) {
+    const d = document.createElement("div");
+    d.textContent = "· " + s;
+    box.appendChild(d);
+  });
+  box.scrollTop = box.scrollHeight;
+}
+
+async function labRun() {
+  const id = (document.getElementById("labId").value || "").trim();
+  const btn = document.getElementById("labBtn");
+  const cancel = document.getElementById("labCancel");
+  const st = document.getElementById("labStatus");
+  if (!/^\d{6,}$/.test(id)) { toast("视频 id 要是纯数字", "bad"); return; }
+
+  btn.disabled = true;
+  btn.textContent = "跑着呢…";
+  if (cancel) cancel.style.display = "inline-block";
+  st.textContent = "已开始（约 10~15 秒）。期间别动 Edge 窗口。";
+  st.style.color = "var(--dim)";
+  labRenderSteps([]);
+  document.getElementById("labText").style.display = "none";
+
+  try {
+    const r = await fetch("/api/lab/summary", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ id })
+    });
+    const j = await r.json();
+    if (!j.ok) {
+      st.textContent = j.error || "启动失败";
+      st.style.color = "var(--bad)";
+      btn.disabled = false; btn.textContent = "取 AI 总结";
+      if (cancel) cancel.style.display = "none";
+      return;
+    }
+    labPoll();
+  } catch (e) {
+    st.textContent = "请求失败：" + e.message;
+    st.style.color = "var(--bad)";
+    btn.disabled = false; btn.textContent = "取 AI 总结";
+    if (cancel) cancel.style.display = "none";
+  }
+}
+
+function labPoll() {
+  clearTimeout(labTimer);
+  labTimer = setTimeout(async function () {
+    try {
+      const r = await fetch("/api/lab/status");
+      const j = await r.json();
+      const job = j.job;
+      const st = document.getElementById("labStatus");
+      if (!job) { labFinish(false, "任务丢了（控制台可能重启过）"); return; }
+      labRenderSteps(job.steps);
+      const secs = Math.round(job.elapsedMs / 100) / 10;
+      if (!job.done) {
+        const last = job.steps && job.steps.length ? job.steps[job.steps.length - 1] : "准备中";
+        st.textContent = "进行中 " + secs + " 秒 · " + last;
+        st.style.color = "var(--dim)";
+        labPoll();
+        return;
+      }
+      const res = job.result || {};
+      if (res.ok) {
+        st.textContent = "成功：" + (res.text || "").length + " 字，用时 " + (Math.round((res.ms || 0) / 100) / 10) + " 秒" + (res.fromHistory ? "（含历史记录标记）" : "");
+        st.style.color = "var(--ok)";
+        document.getElementById("labOut").value = res.text || "";
+        document.getElementById("labText").style.display = "block";
+      } else {
+        st.textContent = "失败：" + (res.error || "未知");
+        st.style.color = "var(--bad)";
+        if (res.shots && res.shots.length) labRenderSteps((job.steps || []).concat(["截图：" + res.shots.join("  ")]));
+      }
+      labFinish(res.ok, null);
+    } catch (e) {
+      labPoll();
+    }
+  }, 700);
+}
+
+function labFinish(ok, msg) {
+  clearTimeout(labTimer);
+  const btn = document.getElementById("labBtn");
+  const cancel = document.getElementById("labCancel");
+  btn.disabled = false;
+  btn.textContent = "取 AI 总结";
+  if (cancel) cancel.style.display = "none";
+  if (msg) {
+    const st = document.getElementById("labStatus");
+    st.textContent = msg;
+    st.style.color = "var(--bad)";
+  }
+}
+
+async function labCancel() {
+  try {
+    await fetch("/api/lab/cancel", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+    toast("已请求取消");
+  } catch (e) { toast("取消失败：" + e.message, "bad"); }
+}
+/* ---------- 实验室：接入开关 ---------- */
+function labBadgeSync() {
+  const en = document.getElementById("labEn");
+  const badge = document.getElementById("labEnBadge");
+  if (!en || !badge) return;
+  const on = en.checked;
+  badge.textContent = on ? "已接入：收到视频会自动取总结" : "未接入（走原来的逻辑）";
+  badge.style.color = on ? "var(--ok)" : "var(--dim)";
+}
+async function loadLabSwitch() {
+  const en = document.getElementById("labEn");
+  const pre = document.getElementById("labPre");
+  if (!en || !cfg) return;
+  const c = (cfg.lab && cfg.lab.aiSummary) || {};
+  en.checked = c.enabled === true;
+  pre.value = c.preLine === undefined ? "我看看" : c.preLine;
+  const badge = document.getElementById("labEnBadge");
+  if (badge) {
+    badge.textContent = en.checked ? "已接入：收到视频会自动取总结" : "未接入（走原来的逻辑）";
+    badge.style.color = en.checked ? "var(--ok)" : "var(--dim)";
+  }
+}
+
+async function saveLabSwitch() {
+  if (!cfg) { toast("配置还没载入", "bad"); return; }
+  cfg.lab = cfg.lab || {};
+  cfg.lab.aiSummary = cfg.lab.aiSummary || {};
+  cfg.lab.aiSummary.enabled = document.getElementById("labEn").checked;
+  cfg.lab.aiSummary.preLine = String(document.getElementById("labPre").value || "").trim();
+  cfg.lab.aiSummary.maxWaitMs = 40000;
+  await save();
+  await loadLabSwitch();
+  toast("实验室开关已保存");
+}
+/* ---------- 代码版本提示：改了代码但没重启会红字提醒 ---------- */
+function renderCodeHint(j) {
+  const el = document.getElementById("codeHint");
+  if (!el) return;
+  const fmt = (iso) => {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    if (isNaN(d)) return "—";
+    return d.toLocaleString("zh-CN", { hour12: false, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  };
+  const code = j.codeMtime;
+  const runner = j.runner;
+  const started = runner && runner.startedAt ? runner.startedAt : null;
+
+  if (!runner) {
+    el.innerHTML = '<span style="color:var(--dim)">代码版本 ' + escapeHtml(fmt(code)) + "（未运行）</span>";
+    return;
+  }
+  const codeT = code ? new Date(code).getTime() : 0;
+  const startT = started ? new Date(started).getTime() : 0;
+  if (codeT && startT && codeT > startT + 1000) {
+    el.innerHTML = '<b style="color:var(--bad)">⚠ 代码已更新（' + escapeHtml(fmt(code)) +
+      "），但进程是 " + escapeHtml(fmt(started)) + ' 启动的 —— 请「停止」再「启动」</b>';
+  } else {
+    el.innerHTML = '<span style="color:var(--dim)">代码版本 ' + escapeHtml(fmt(code)) + " · 进程启动 " + escapeHtml(fmt(started)) + "</span>";
+  }
+}
+
+/* ---------- 实验室：学词 ---------- */
+async function loadLexSwitch() {
+  if (!cfg) return;
+  const c = cfg.lexicon || {};
+  const en = document.getElementById("lexEnabled");
+  const ev = document.getElementById("lexEvery");
+  if (en) en.checked = c.enabled !== false;
+  if (ev) ev.value = c.everyReplies || 12;
+  const st = document.getElementById("lexState");
+  if (st) {
+    st.textContent = (en && en.checked) ? "已启用：会学词，也会注入提示词" : "已关闭：不学也不注入（已禁的词仍然生效）";
+    st.style.color = (en && en.checked) ? "var(--ok)" : "var(--dim)";
+  }
+}
+
+async function saveLexSwitch() {
+  if (!cfg) return;
+  cfg.lexicon = cfg.lexicon || {};
+  const en = document.getElementById("lexEnabled");
+  const ev = document.getElementById("lexEvery");
+  cfg.lexicon.enabled = !!(en && en.checked);
+  const n = parseInt((ev && ev.value) || "12", 10);
+  cfg.lexicon.everyReplies = Number.isFinite(n) && n >= 3 ? n : 12;
+  await save();
+  await loadLexSwitch();
+  toast("学词开关已保存", "ok");
+}
+
+async function refreshLex() {
+  const box = document.getElementById("lexList");
+  const badge = document.getElementById("lexBadge");
+  if (!box) return;
+  try {
+    const r = await fetch("/api/lexicon");
+    const j = await r.json();
+    if (!j.ok) return;
+    const terms = j.terms || [];
+    const banned = j.banned || [];
+    if (badge) badge.textContent = "在用 " + terms.filter(function (x) { return !x.disabled; }).length + " / 禁用 " + banned.length;
+    if (!terms.length && !banned.length) {
+      box.innerHTML = '<span class="hint">还没学到词。聊够 12 轮之后她会自己开始学。</span>';
+      return;
+    }
+    box.innerHTML = terms.map(function (x) {
+      var t = escapeHtml(x.term);
+      var m = x.meaning ? "＝" + escapeHtml(x.meaning) : "";
+      var u = x.usage ? '<span style="color:var(--dim)">（例：' + escapeHtml(x.usage) + '）</span>' : "";
+      var c = x.conv ? '<span style="color:var(--dim)">· ' + escapeHtml(x.conv) + '</span>' : "";
+      var st = x.disabled ? '<span style="color:var(--warn)">[已停用]</span> ' : "";
+      return '<div class="mem-row"><span class="txt">' + st + '<b>' + t + '</b>' + m + " " + u + c + '</span>' +
+        '<span class="ops">' +
+        '<button onclick="lexAct(\'toggle\',\'' + t + '\',' + (x.disabled ? "false" : "true") + ')">' + (x.disabled ? "启用" : "停用") + '</button>' +
+        '<button onclick="lexEdit(\'' + t + '\',\'' + String(x.meaning || "").replace(/'/g, "") + '\')">改</button>' +
+        '<button onclick="lexAct(\'ban\',\'' + t + '\')">禁</button>' +
+        '<button class="del" onclick="lexAct(\'delete\',\'' + t + '\')">删</button>' +
+        '</span></div>';
+    }).join("");
+    if (banned.length) {
+      box.innerHTML += '<div style="margin-top:12px;color:var(--dim);font-size:12px">你禁掉的：' +
+        banned.map(function (b) { return escapeHtml(b.term) + ' <a href="#" onclick="lexAct(\'unban\',\'' + escapeHtml(b.term) + '\');return false" style="color:var(--accent)">解除</a>'; }).join("　") + '</div>';
+    }
+  } catch (e) { showErr(e, "refreshLex"); }
+}
+
+async function lexAddManual() {
+  const t = document.getElementById("lexTerm");
+  const m = document.getElementById("lexMeaning");
+  const term = (t && t.value || "").trim();
+  if (!term) return toast("先写个词", "bad");
+  try {
+    const r = await fetch("/api/lexicon", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-console-token": CONSOLE_TOKEN },
+      body: JSON.stringify({ action: "add", term: term, meaning: (m && m.value || "").trim() }),
+    });
+    const j = await r.json();
+    if (j && j.added) { toast("加了：" + term, "ok"); if (t) t.value = ""; if (m) m.value = ""; }
+    else toast(j && j.reason ? j.reason : "没加进去", "bad");
+    refreshLex();
+  } catch (e) { showErr(e, "lexAddManual"); }
+}
+
+async function lexEdit(term, cur) {
+  const v = prompt("「" + term + "」的意思（留空表示清空）：", cur || "");
+  if (v === null) return;
+  try {
+    const r = await fetch("/api/lexicon", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-console-token": CONSOLE_TOKEN },
+      body: JSON.stringify({ action: "meaning", term: term, meaning: v.trim() }),
+    });
+    const j = await r.json();
+    if (j && j.ok) toast("已改：" + term, "ok");
+    else toast("没改成", "bad");
+    refreshLex();
+  } catch (e) { showErr(e, "lexEdit"); }
+}
+
+async function lexAct(action, term, disabled) {
+  try {
+    const r = await fetch("/api/lexicon", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-console-token": CONSOLE_TOKEN },
+      body: JSON.stringify({ action: action, term: term, disabled: disabled })
+    });
+    const j = await r.json();
+    if (j && j.error) toast(j.error, "bad");
+    refreshLex();
+  } catch (e) { showErr(e, "lexAct"); }
+}
+
+async function lexClearDisabled() {
+  try {
+    const r = await fetch("/api/lexicon");
+    const j = await r.json();
+    const dead = (j.terms || []).filter(function (x) { return x.disabled; });
+    if (!dead.length) return toast("没有停用的词", "ok");
+    for (const x of dead) {
+      await fetch("/api/lexicon", { method: "POST", headers: { "content-type": "application/json", "x-console-token": CONSOLE_TOKEN }, body: JSON.stringify({ action: "delete", term: x.term }) });
+    }
+    toast("删了 " + dead.length + " 个", "ok");
+    refreshLex();
+  } catch (e) { showErr(e, "lexClearDisabled"); }
+}
+/* ---------- 实验室：点赞 ---------- */
+async function loadLikeSwitch() {
+  if (!cfg) return;
+  const c = (cfg.lab && cfg.lab.autoLike) || {};
+  const en = document.getElementById("likeEnabled");
+  const dry = document.getElementById("likeDry");
+  const sc = document.getElementById("likeScore");
+  const cap = document.getElementById("likeCap");
+  if (en) en.checked = c.enabled === true;
+  if (dry) dry.checked = c.dryRun !== false;
+  if (sc) sc.value = c.minScore || 24;
+  if (cap) cap.value = c.dailyCap === undefined ? 10 : c.dailyCap;
+  const badge = document.getElementById("likeBadge");
+  if (badge) {
+    badge.textContent = en && en.checked ? (dry && dry.checked ? "已启用 · 预演中" : "已启用 · 会真的点") : "未启用";
+    badge.style.color = en && en.checked ? (dry && dry.checked ? "var(--warn)" : "var(--ok)") : "var(--dim)";
+  }
+  const st = document.getElementById("likeState");
+  if (st) {
+    if (!(en && en.checked)) st.textContent = "关闭：看完视频不会点赞";
+    else if (dry && dry.checked) st.textContent = "预演：只判断并记录「本来要点哪个」，不会真的点";
+    else st.textContent = "真实模式：评分过线就会真的点赞（每天有上限）";
+    st.style.color = en && en.checked ? (dry && dry.checked ? "var(--warn)" : "var(--ok)") : "var(--dim)";
+  }
+}
+
+async function saveLikeSwitch() {
+  if (!cfg) return;
+  cfg.lab = cfg.lab || {};
+  cfg.lab.autoLike = cfg.lab.autoLike || {};
+  const en = document.getElementById("likeEnabled");
+  const dry = document.getElementById("likeDry");
+  const sc = document.getElementById("likeScore");
+  const cap = document.getElementById("likeCap");
+  cfg.lab.autoLike.enabled = !!(en && en.checked);
+  cfg.lab.autoLike.dryRun = !(dry && !dry.checked);
+  const s1 = parseInt((sc && sc.value) || "24", 10);
+  cfg.lab.autoLike.minScore = Number.isFinite(s1) ? Math.max(0, Math.min(100, s1)) : 24;
+  const c1 = parseInt((cap && cap.value) || "10", 10);
+  cfg.lab.autoLike.dailyCap = Number.isFinite(c1) ? Math.max(0, Math.min(20, c1)) : 10;
+  await save();
+  await loadLikeSwitch();
+  refreshLike();
+}
+
+async function refreshLike() {
+  const box = document.getElementById("likeList");
+  const st = document.getElementById("likeState");
+  if (!box) return;
+  try {
+    const r = await fetch("/api/likes");
+    const j = await r.json();
+    if (!j.ok) return;
+    const cap = (cfg && cfg.lab && cfg.lab.autoLike && cfg.lab.autoLike.dailyCap) || 10;
+    if (st && (!cfg || !cfg.lab || !cfg.lab.autoLike || cfg.lab.autoLike.enabled !== true)) {
+      // 关闭状态下的文案由 loadLikeSwitch 负责
+    }
+    const head = `<div style="color:var(--dim);font-size:12px;margin-bottom:6px">今天已点 ${j.todayClicked || 0} / 上限 ${cap}</div>`;
+    const rows = (j.recent || []).map(function (x) {
+      const t = new Date(x.ts).toLocaleString("zh-CN", { hour12: false, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+      const why = x.skipped === "low-score" ? ("评分不够（" + x.score + " < " + x.minScore + "）")
+        : x.clicked ? "已点" : x.already ? "之前已赞" : x.dryRun ? "预演（可点，未真点）" : x.ok ? "跳过" : "失败：" + (x.error || "");
+      return `<div class="mem-row"><span class="txt">· ${t}｜${escapeHtml(x.conv || "")}｜${x.score} 分（门槛 ${x.minScore}）｜${escapeHtml(why)}</span></div>`;
+    }).join("");
+    box.innerHTML = head + (rows || '<span class="hint">还没有记录。勾上「启用」+「预演」后，让他发一条视频，这里就会出现评分与结论。</span>');
+  } catch (e) { showErr(e, "refreshLike"); }
+}
+
+/* ---------- 顶部红条：代码比进程新时显示，一键重启 ---------- */
+async function restartRunner() {
+  const banner = document.getElementById("verBanner");
+  try {
+    let send = true;
+    try {
+      const st = await (await fetch("/api/status")).json();
+      if (st && st.runner && st.runner.send === false) send = false;
+    } catch {}
+    await fetch("/api/run", { method: "POST", headers: { "content-type": "application/json", "x-console-token": CONSOLE_TOKEN }, body: JSON.stringify({ action: "stop" }) });
+    await new Promise((r) => setTimeout(r, 1500));
+    const r2 = await fetch("/api/run", { method: "POST", headers: { "content-type": "application/json", "x-console-token": CONSOLE_TOKEN }, body: JSON.stringify({ action: "start", send }) });
+    const j2 = await r2.json();
+    if (j2 && j2.ok) {
+      toast("已重启运行" + (send ? "（真发）" : "（预演）"), "ok");
+      if (banner) banner.style.display = "none";
+    } else {
+      toast("重启失败：" + ((j2 && j2.error) || "未知"), "bad");
+    }
+    setTimeout(() => { try { refreshStatus(); } catch {} }, 1200);
+  } catch (e) { showErr(e, "restartRunner"); }
+}
+
+function updateVerBanner(j) {
+  const b = document.getElementById("verBanner");
+  const t = document.getElementById("verBannerText");
+  if (!b) return;
+  const fmt = (iso) => { const d = new Date(iso); return isNaN(d) ? "—" : d.toLocaleString("zh-CN", { hour12: false, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }); };
+  const codeT = j && j.codeMtime ? new Date(j.codeMtime).getTime() : 0;
+  const startT = j && j.runner && j.runner.startedAt ? new Date(j.runner.startedAt).getTime() : 0;
+  const stale = !!(codeT && startT && codeT > startT + 1000);
+  if (stale) {
+    if (t) t.textContent = `代码 ${fmt(j.codeMtime)} · 进程 ${fmt(j.runner.startedAt)}`;
+    b.style.display = "flex";
+    document.body.style.paddingTop = "0px";
+  } else {
+    b.style.display = "none";
+  }
+}
+</script>
+</main>
+</body>
+</html>

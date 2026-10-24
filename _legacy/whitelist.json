@@ -1,0 +1,22 @@
+{
+  "_说明": "白名单：只给这些人发转发私信，最多 5 个，必须是特别要好的朋友。注意：AI 用它自己的号发，所以这里填的是《你朋友的抖音号》，不是 AI 号。",
+  "_状态": "待填（你建完 AI 号、加上朋友之后填）",
+  "friends": [],
+  "rules": {
+    "max_friends": 5,
+    "max_recipients_per_video": 3,
+    "same_video_cooldown_hours": 24,
+    "never_resend_same_video_to_same_person": true,
+    "daily_outgoing_cap": 3,
+    "daily_outgoing_cap_note": "头两天降速用。第 3 天起可以改到 10，但改之前先看复盘。",
+    "proactive_per_day_max": 1
+  },
+  "friends_example": [
+    {
+      "name": "老王",
+      "douyin_id": "填写抖音号（不是昵称）",
+      "note": "死党，爱看手作和极限操作",
+      "never_send": "别发跟减肥有关的，他正在较劲"
+    }
+  ]
+}

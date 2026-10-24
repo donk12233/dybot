@@ -1,0 +1,33 @@
+# ===== 敏感数据：绝对不能提交 =====
+state/
+.edge-profile/
+*.log
+
+# 密钥/令牌
+state/llm.json
+state/console.token
+
+# 配置备份与运行数据（含收件人、视频 id、每日额度计数）
+config.json.bak
+*.bak
+sent.jsonl
+
+# 运行时产物
+node_modules/
+
+# 你的真实配置（白名单含朋友的抖音号）不进仓库，只提交 config.example.json
+config.json
+
+# SSH 私钥（推送用，绝不能提交）
+.ssh/
+
+# 兜底：任何环境下都别提交这些
+.env
+.env.*
+*.pem
+*.key
+*.jsonl
+*.sqlite
+*.db
+state.local.json
+*.local.json
